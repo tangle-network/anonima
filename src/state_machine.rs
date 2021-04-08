@@ -10,4 +10,3 @@ pub enum State {
 	// to the network.
 	Setup,
 }
-
