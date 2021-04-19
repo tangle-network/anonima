@@ -36,7 +36,7 @@ pub use prometheus_endpoint::{Histogram, HistogramVec};
 /// Registers all networking metrics with the given registry.
 pub fn register(registry: &Registry, sources: MetricSources) -> Result<Metrics, PrometheusError> {
 	BandwidthCounters::register(registry, sources.bandwidth)?;
-	MajorSyncingGauge::register(registry, sources.major_syncing)?;
+	// MajorSyncingGauge::register(registry, sources.major_syncing)?;
 	NumConnectedGauge::register(registry, sources.connected_peers)?;
 	Metrics::register(registry)
 }
@@ -44,7 +44,7 @@ pub fn register(registry: &Registry, sources: MetricSources) -> Result<Metrics, 
 /// Predefined metric sources that are fed directly into prometheus.
 pub struct MetricSources {
 	pub bandwidth: Arc<BandwidthSinks>,
-	pub major_syncing: Arc<AtomicBool>,
+	// pub major_syncing: Arc<AtomicBool>,
 	pub connected_peers: Arc<AtomicUsize>,
 }
 

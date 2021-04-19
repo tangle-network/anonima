@@ -108,17 +108,17 @@ pub use behaviour::{ResponseFailure, InboundFailure, RequestFailure, OutboundFai
 
 mod metrics;
 mod out_events;
-#[cfg(test)]
-mod tests;
+// #[cfg(test)]
+// mod tests;
 
-/// Substrate network service. Handles network IO and manages connectivity.
+/// network service. Handles network IO and manages connectivity.
 pub struct NetworkService<B: BlockT + 'static, H: ExHashT> {
 	/// Number of peers we're connected to.
 	num_connected: Arc<AtomicUsize>,
 	/// The local external addresses.
 	external_addresses: Arc<Mutex<Vec<Multiaddr>>>,
 	/// Are we actively catching up with the chain?
-	is_major_syncing: Arc<AtomicBool>,
+	// is_major_syncing: Arc<AtomicBool>,
 	/// Local copy of the `PeerId` of the local node.
 	local_peer_id: PeerId,
 	/// Bandwidth logging system. Can be queried to know the average bandwidth consumed.
@@ -241,7 +241,7 @@ impl<B: BlockT + 'static, H: ExHashT> NetworkWorker<B, H> {
 			.unwrap_or_else(|| Arc::new(AlwaysBadChecker));
 
 		let num_connected = Arc::new(AtomicUsize::new(0));
-		let is_major_syncing = Arc::new(AtomicBool::new(false));
+		// let is_major_syncing = Arc::new(AtomicBool::new(false));
 
 		// Build the swarm.
 		let client = params.chain.clone();
@@ -379,7 +379,7 @@ impl<B: BlockT + 'static, H: ExHashT> NetworkWorker<B, H> {
 			Some(registry) => {
 				Some(metrics::register(registry, MetricSources {
 					bandwidth: bandwidth.clone(),
-					major_syncing: is_major_syncing.clone(),
+					// major_syncing: is_major_syncing.clone(),
 					connected_peers: num_connected.clone(),
 				})?)
 			}
@@ -405,7 +405,7 @@ impl<B: BlockT + 'static, H: ExHashT> NetworkWorker<B, H> {
 			bandwidth,
 			external_addresses: external_addresses.clone(),
 			num_connected: num_connected.clone(),
-			is_major_syncing: is_major_syncing.clone(),
+			// is_major_syncing: is_major_syncing.clone(),
 			peerset: peerset_handle,
 			local_peer_id,
 			to_worker,
@@ -426,7 +426,7 @@ impl<B: BlockT + 'static, H: ExHashT> NetworkWorker<B, H> {
 		Ok(NetworkWorker {
 			external_addresses,
 			num_connected,
-			is_major_syncing,
+			// is_major_syncing,
 			network_service: swarm,
 			service,
 			import_queue: params.import_queue,
@@ -441,10 +441,10 @@ impl<B: BlockT + 'static, H: ExHashT> NetworkWorker<B, H> {
 	}
 
 	/// High-level network status information.
-	pub fn status(&self) -> NetworkStatus<B> {
+	pub fn status(&self) -> NetworkStatus {
 		NetworkStatus {
-			sync_state: self.sync_state(),
-			best_seen_block: self.best_seen_block(),
+			// sync_state: self.sync_state(),
+			// best_seen_block: self.best_seen_block(),
 			num_sync_peers: self.num_sync_peers(),
 			num_connected_peers: self.num_connected_peers(),
 			num_active_peers: self.num_active_peers(),
@@ -473,15 +473,15 @@ impl<B: BlockT + 'static, H: ExHashT> NetworkWorker<B, H> {
 		self.network_service.user_protocol().num_active_peers()
 	}
 
-	/// Current global sync state.
-	pub fn sync_state(&self) -> SyncState {
-		self.network_service.user_protocol().sync_state()
-	}
+	// Current global sync state.
+	// pub fn sync_state(&self) -> SyncState {
+	// 	self.network_service.user_protocol().sync_state()
+	// }
 
-	/// Target sync block number.
-	pub fn best_seen_block(&self) -> Option<NumberFor<B>> {
-		self.network_service.user_protocol().best_seen_block()
-	}
+	// Target sync block number.
+	// pub fn best_seen_block(&self) -> Option<NumberFor<B>> {
+	// 	self.network_service.user_protocol().best_seen_block()
+	// }
 
 	/// Number of peers participating in syncing.
 	pub fn num_sync_peers(&self) -> u32 {
@@ -934,10 +934,10 @@ impl<B: BlockT + 'static, H: ExHashT> NetworkService<B, H> {
 			.unbounded_send(ServiceToWorkerMsg::RequestJustification(*hash, number));
 	}
 
-	/// Are we in the process of downloading the chain?
-	pub fn is_major_syncing(&self) -> bool {
-		self.is_major_syncing.load(Ordering::Relaxed)
-	}
+	// Are we in the process of downloading the chain?
+	// pub fn is_major_syncing(&self) -> bool {
+	// 	self.is_major_syncing.load(Ordering::Relaxed)
+	// }
 
 	/// Start getting a value from the DHT.
 	///
@@ -1153,29 +1153,29 @@ impl<B: BlockT + 'static, H: ExHashT> NetworkService<B, H> {
 	}
 }
 
-impl<B: BlockT + 'static, H: ExHashT> sp_consensus::SyncOracle
-	for NetworkService<B, H>
-{
-	fn is_major_syncing(&mut self) -> bool {
-		NetworkService::is_major_syncing(self)
-	}
+// impl<B: BlockT + 'static, H: ExHashT> sp_consensus::SyncOracle
+// 	for NetworkService<B, H>
+// {
+// 	fn is_major_syncing(&mut self) -> bool {
+// 		NetworkService::is_major_syncing(self)
+// 	}
 
-	fn is_offline(&mut self) -> bool {
-		self.num_connected.load(Ordering::Relaxed) == 0
-	}
-}
+// 	fn is_offline(&mut self) -> bool {
+// 		self.num_connected.load(Ordering::Relaxed) == 0
+// 	}
+// }
 
-impl<'a, B: BlockT + 'static, H: ExHashT> sp_consensus::SyncOracle
-	for &'a NetworkService<B, H>
-{
-	fn is_major_syncing(&mut self) -> bool {
-		NetworkService::is_major_syncing(self)
-	}
+// impl<'a, B: BlockT + 'static, H: ExHashT> sp_consensus::SyncOracle
+// 	for &'a NetworkService<B, H>
+// {
+// 	fn is_major_syncing(&mut self) -> bool {
+// 		NetworkService::is_major_syncing(self)
+// 	}
 
-	fn is_offline(&mut self) -> bool {
-		self.num_connected.load(Ordering::Relaxed) == 0
-	}
-}
+// 	fn is_offline(&mut self) -> bool {
+// 		self.num_connected.load(Ordering::Relaxed) == 0
+// 	}
+// }
 
 impl<B, H> NetworkStateInfo for NetworkService<B, H>
 	where
@@ -1316,7 +1316,7 @@ pub struct NetworkWorker<B: BlockT + 'static, H: ExHashT> {
 	/// Updated by the `NetworkWorker` and loaded by the `NetworkService`.
 	num_connected: Arc<AtomicUsize>,
 	/// Updated by the `NetworkWorker` and loaded by the `NetworkService`.
-	is_major_syncing: Arc<AtomicBool>,
+	// is_major_syncing: Arc<AtomicBool>,
 	/// The network service that can be extracted and shared through the codebase.
 	service: Arc<NetworkService<B, H>>,
 	/// The *actual* network.
@@ -1789,14 +1789,14 @@ impl<B: BlockT + 'static, H: ExHashT> Future for NetworkWorker<B, H> {
 			*this.external_addresses.lock() = external_addresses;
 		}
 
-		let is_major_syncing = match this.network_service.user_protocol_mut().sync_state() {
-			SyncState::Idle => false,
-			SyncState::Downloading => true,
-		};
+		// let is_major_syncing = match this.network_service.user_protocol_mut().sync_state() {
+		// 	SyncState::Idle => false,
+		// 	SyncState::Downloading => true,
+		// };
 
-		this.tx_handler_controller.set_gossip_enabled(!is_major_syncing);
+		// this.tx_handler_controller.set_gossip_enabled(!is_major_syncing);
 
-		this.is_major_syncing.store(is_major_syncing, Ordering::Relaxed);
+		// this.is_major_syncing.store(is_major_syncing, Ordering::Relaxed);
 
 		if let Some(metrics) = this.metrics.as_ref() {
 			for (proto, buckets) in this.network_service.num_entries_per_kbucket() {

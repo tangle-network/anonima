@@ -168,7 +168,7 @@ impl<H: HeaderT> generic::BlockAnnounce<H> {
 pub mod generic {
 	use bitflags::bitflags;
 	use codec::{Encode, Decode, Input, Output};
-	use sp_runtime::EncodedJustification;
+	// use sp_runtime::EncodedJustification;
 	use super::{
 		RemoteReadResponse, Transactions, Direction,
 		RequestId, BlockAttributes, RemoteCallResponse, ConsensusEngineId,
@@ -252,8 +252,8 @@ pub mod generic {
 		pub receipt: Option<Vec<u8>>,
 		/// Block message queue if requested.
 		pub message_queue: Option<Vec<u8>>,
-		/// Justification if requested.
-		pub justification: Option<EncodedJustification>,
+		//// Justification if requested.
+		// pub justification: Option<EncodedJustification>,
 	}
 
 	/// Identifies starting point of a block sequence.

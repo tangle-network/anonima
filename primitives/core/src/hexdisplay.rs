@@ -71,11 +71,11 @@ impl AsBytesRef for sp_std::vec::Vec<u8> {
 	fn as_bytes_ref(&self) -> &[u8] { &self }
 }
 
-impl AsBytesRef for sp_storage::StorageKey {
-	fn as_bytes_ref(&self) -> &[u8] {
-		self.as_ref()
-	}
-}
+// impl AsBytesRef for sp_storage::StorageKey {
+// 	fn as_bytes_ref(&self) -> &[u8] {
+// 		self.as_ref()
+// 	}
+// }
 
 macro_rules! impl_non_endians {
 	( $( $t:ty ),* ) => { $(

@@ -66,7 +66,7 @@ pub use self::state_machine::TopicNotification;
 pub use self::validator::{DiscardAll, MessageIntent, Validator, ValidatorContext, ValidationResult};
 
 use futures::prelude::*;
-use sc_network::{multiaddr, Event, ExHashT, NetworkService, PeerId, ReputationChange};
+use ac_network::{multiaddr, Event, ExHashT, NetworkService, PeerId, ReputationChange};
 use sp_runtime::{traits::Block as BlockT};
 use std::{borrow::Cow, iter, pin::Pin, sync::Arc};
 

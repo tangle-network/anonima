@@ -27,7 +27,7 @@ use lru::LruCache;
 use libp2p::PeerId;
 use prometheus_endpoint::{register, Counter, PrometheusError, Registry, U64};
 use sp_runtime::traits::{Block as BlockT, Hash, HashFor};
-use sc_network::ObservedRole;
+use ac_network::ObservedRole;
 use wasm_timer::Instant;
 
 // FIXME: Add additional spam/DoS attack protection: https://github.com/paritytech/substrate/issues/1115

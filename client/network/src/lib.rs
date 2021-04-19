@@ -19,14 +19,13 @@
 #![warn(unused_extern_crates)]
 #![warn(missing_docs)]
 
-//! Substrate-specific P2P networking.
+//! P2P networking.
 //!
 //! **Important**: This crate is unstable and the API and usage may change.
 //!
 //! # Node identities and addresses
 //!
 //! In a decentralized network, each node possesses a network private key and a network public key.
-//! In Substrate, the keys are based on the ed25519 curve.
 //!
 //! From a node's public key, we can derive its *identity*. In Substrate and libp2p, a node's
 //! identity is represented with the [`PeerId`] struct. All network communications between nodes on
@@ -36,9 +35,9 @@
 //! A node's identity uniquely identifies a machine on the network. If you start two or more
 //! clients using the same network key, large interferences will happen.
 //!
-//! # Substrate's network protocol
+//! # network protocol
 //!
-//! Substrate's networking protocol is based upon libp2p. It is at the moment not possible and not
+//! networking protocol is based upon libp2p. It is at the moment not possible and not
 //! planned to permit using something else than the libp2p network stack and the rust-libp2p
 //! library. However the libp2p framework is very flexible and the rust-libp2p library could be
 //! extended to support a wider range of protocols than what is offered by libp2p.
@@ -106,7 +105,7 @@
 //! >           one can use both the `/dot/sync/2` and `/sub/sync/2` protocols on the same
 //! >           connection, provided that the remote supports them.
 //!
-//! Substrate uses the following standard libp2p protocols:
+//! standard libp2p protocols:
 //!
 //! - **`/ipfs/ping/1.0.0`**. We periodically open an ephemeral substream in order to ping the
 //! remote and check whether the connection is still alive. Failure for the remote to reply leads
@@ -117,7 +116,7 @@
 //! ephemeral substreams for Kademlia random walk queries. Each Kademlia query is done in a
 //! separate substream.
 //!
-//! Additionally, Substrate uses the following non-libp2p-standard protocols:
+//! Additionally, uses the following non-libp2p-standard protocols:
 //!
 //! - **`/substrate/<protocol-id>/<version>`** (where `<protocol-id>` must be replaced with the
 //! protocol ID of the targeted chain, and `<version>` is a number between 2 and 6). For each
@@ -145,7 +144,7 @@
 //! `NetworkConfiguration::notifications_protocols`. For example: `/paritytech/grandpa/1`. See
 //! below for more information.
 //!
-//! ## The legacy Substrate substream
+//! ## The legacy substream
 //!
 //! Substrate uses a component named the **peerset manager (PSM)**. Through the discovery
 //! mechanism, the PSM is aware of the nodes that are part of the network and decides which nodes
@@ -208,7 +207,7 @@
 //! - Either party can signal that it doesn't want a notifications substream anymore by closing
 //! its writing side. The other party should respond by closing its own writing side soon after.
 //!
-//! The API of `sc-network` allows one to register user-defined notification protocols.
+//! The API of `ac-network` allows one to register user-defined notification protocols.
 //! `sc-network` automatically tries to open a substream towards each node for which the legacy
 //! Substream substream is open. The handshake is then performed automatically.
 //!
@@ -227,7 +226,7 @@
 //!
 //! # Usage
 //!
-//! Using the `sc-network` crate is done through the [`NetworkWorker`] struct. Create this
+//! Using the `ac-network` crate is done through the [`NetworkWorker`] struct. Create this
 //! struct by passing a [`config::Params`], then poll it as if it was a `Future`. You can extract an
 //! `Arc<NetworkService>` from the `NetworkWorker`, which can be shared amongst multiple places
 //! in order to give orders to the networking.
@@ -257,7 +256,7 @@ mod service;
 mod transport;
 mod utils;
 
-pub mod block_request_handler;
+// pub mod block_request_handler;
 pub mod bitswap;
 pub mod light_client_requests;
 pub mod config;
@@ -306,11 +305,11 @@ pub trait NetworkStateInfo {
 
 /// Overview status of the network.
 #[derive(Clone)]
-pub struct NetworkStatus<B: BlockT> {
-	/// Current global sync state.
-	pub sync_state: SyncState,
-	/// Target sync block number.
-	pub best_seen_block: Option<NumberFor<B>>,
+pub struct NetworkStatus {
+	// Current global sync state.
+	// pub sync_state: SyncState,
+	// Target sync block number.
+	// pub best_seen_block: Option<NumberFor<B>>,
 	/// Number of peers participating in syncing.
 	pub num_sync_peers: u32,
 	/// Total number of connected peers
