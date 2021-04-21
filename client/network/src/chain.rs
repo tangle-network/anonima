@@ -18,7 +18,7 @@
 
 //! Blockchain access trait
 
-use sp_blockchain::{Error, HeaderBackend, HeaderMetadata};
+// use sp_blockchain::{Error, HeaderBackend, HeaderMetadata};
 use sc_client_api::{BlockBackend, ProofProvider};
 use sp_runtime::traits::{Block as BlockT, BlockIdTo};
 

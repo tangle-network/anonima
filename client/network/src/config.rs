@@ -21,8 +21,8 @@
 //! The [`Params`] struct is the struct that must be passed in order to initialize the networking.
 //! See the documentation of [`Params`].
 
-pub use crate::chain::Client;
-pub use crate::on_demand_layer::{AlwaysBadChecker, OnDemand};
+// pub use crate::chain::Client;
+// pub use crate::on_demand_layer::{AlwaysBadChecker, OnDemand};
 pub use crate::request_responses::{
 	IncomingRequest,
 	OutgoingResponse,
@@ -44,7 +44,7 @@ use libp2p::{
 	multiaddr, wasm_ext, Multiaddr, PeerId,
 };
 use prometheus_endpoint::Registry;
-use sp_consensus::{block_validation::BlockAnnounceValidator, import_queue::ImportQueue};
+// use sp_consensus::{block_validation::BlockAnnounceValidator, import_queue::ImportQueue};
 use sp_runtime::traits::Block as BlockT;
 use std::{borrow::Cow, convert::TryFrom, future::Future, pin::Pin, str::FromStr};
 use std::{
@@ -60,7 +60,7 @@ use std::{
 use zeroize::Zeroize;
 
 /// Network initialization parameters.
-pub struct Params<B: BlockT, H: ExHashT> {
+pub struct Params {
 	/// Assigned role for our node (full, light, ...).
 	pub role: Role,
 
@@ -74,31 +74,31 @@ pub struct Params<B: BlockT, H: ExHashT> {
 	/// Network layer configuration.
 	pub network_config: NetworkConfiguration,
 
-	/// Client that contains the blockchain.
-	pub chain: Arc<dyn Client<B>>,
+	//// Client that contains the blockchain.
+	// pub chain: Arc<dyn Client<B>>,
 
-	/// The `OnDemand` object acts as a "receiver" for block data requests from the client.
-	/// If `Some`, the network worker will process these requests and answer them.
-	/// Normally used only for light clients.
-	pub on_demand: Option<Arc<OnDemand<B>>>,
+	// / The `OnDemand` object acts as a "receiver" for block data requests from the client.
+	// / If `Some`, the network worker will process these requests and answer them.
+	// / Normally used only for light clients.
+	// pub on_demand: Option<Arc<OnDemand<B>>>,
 
-	/// Pool of transactions.
-	///
-	/// The network worker will fetch transactions from this object in order to propagate them on
-	/// the network.
-	pub transaction_pool: Arc<dyn TransactionPool<H, B>>,
+	// / Pool of transactions.
+	// /
+	// / The network worker will fetch transactions from this object in order to propagate them on
+	// / the network.
+	// pub transaction_pool: Arc<dyn TransactionPool<H, B>>,
 
 	/// Name of the protocol to use on the wire. Should be different for each chain.
 	pub protocol_id: ProtocolId,
 
-	/// Import queue to use.
-	///
-	/// The import queue is the component that verifies that blocks received from other nodes are
-	/// valid.
-	pub import_queue: Box<dyn ImportQueue<B>>,
+	//// Import queue to use.
+	////
+	//// The import queue is the component that verifies that blocks received from other nodes are
+	//// valid.
+	// pub import_queue: Box<dyn ImportQueue<B>>,
 
-	/// Type to check incoming block announcements.
-	pub block_announce_validator: Box<dyn BlockAnnounceValidator<B> + Send>,
+	//// Type to check incoming block announcements.
+	// pub block_announce_validator: Box<dyn BlockAnnounceValidator<B> + Send>,
 
 	/// Registry for recording prometheus metrics to.
 	pub metrics_registry: Option<Registry>,

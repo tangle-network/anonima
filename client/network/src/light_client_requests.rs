@@ -64,7 +64,7 @@ mod tests {
 	use sc_client_api::light::{self, RemoteReadRequest, RemoteBodyRequest, ChangesProof};
 	use sc_client_api::{FetchChecker, RemoteReadChildRequest};
 	use sp_blockchain::Error as ClientError;
-	use sp_core::storage::ChildInfo;
+	use ap_core::storage::ChildInfo;
 	use sp_runtime::generic::Header;
 	use sp_runtime::traits::{BlakeTwo256, Block as BlockT, NumberFor};
 	use std::collections::HashMap;
@@ -158,8 +158,8 @@ mod tests {
 		ProtocolId::from("test")
 	}
 
-	pub fn peerset() -> (sc_peerset::Peerset, sc_peerset::PeersetHandle) {
-		let cfg = sc_peerset::SetConfig {
+	pub fn peerset() -> (ac_peerset::Peerset, ac_peerset::PeersetHandle) {
+		let cfg = ac_peerset::SetConfig {
 			in_peers: 128,
 			out_peers: 128,
 			bootnodes: Default::default(),
@@ -169,166 +169,166 @@ mod tests {
 		sc_peerset::Peerset::from_config(sc_peerset::PeersetConfig { sets: vec![cfg] })
 	}
 
-	pub fn dummy_header() -> sp_test_primitives::Header {
-		sp_test_primitives::Header {
-			parent_hash: Default::default(),
-			number: 0,
-			state_root: Default::default(),
-			extrinsics_root: Default::default(),
-			digest: Default::default(),
-		}
-	}
+	// pub fn dummy_header() -> sp_test_primitives::Header {
+	// 	sp_test_primitives::Header {
+	// 		parent_hash: Default::default(),
+	// 		number: 0,
+	// 		state_root: Default::default(),
+	// 		extrinsics_root: Default::default(),
+	// 		digest: Default::default(),
+	// 	}
+	// }
 
-	type Block =
-		sp_runtime::generic::Block<Header<u64, BlakeTwo256>, substrate_test_runtime::Extrinsic>;
+	// type Block =
+	// 	sp_runtime::generic::Block<Header<u64, BlakeTwo256>, substrate_test_runtime::Extrinsic>;
 
-	fn send_receive(request: sender::Request<Block>, pool: &LocalPool) {
-		let client = Arc::new(substrate_test_runtime_client::new());
-		let (handler, protocol_config) = handler::LightClientRequestHandler::new(&protocol_id(), client);
-		pool.spawner().spawn_obj(handler.run().boxed().into()).unwrap();
+	// fn send_receive(request: sender::Request<Block>, pool: &LocalPool) {
+	// 	let client = Arc::new(substrate_test_runtime_client::new());
+	// 	let (handler, protocol_config) = handler::LightClientRequestHandler::new(&protocol_id(), client);
+	// 	pool.spawner().spawn_obj(handler.run().boxed().into()).unwrap();
 
-		let (_peer_set, peer_set_handle) = peerset();
-		let mut sender = sender::LightClientRequestSender::<Block>::new(
-			&protocol_id(),
-			Arc::new(crate::light_client_requests::tests::DummyFetchChecker {
-				ok: true,
-				_mark: std::marker::PhantomData,
-			}),
-			peer_set_handle,
-		);
-		sender.inject_connected(PeerId::random());
+	// 	let (_peer_set, peer_set_handle) = peerset();
+	// 	let mut sender = sender::LightClientRequestSender::<Block>::new(
+	// 		&protocol_id(),
+	// 		Arc::new(crate::light_client_requests::tests::DummyFetchChecker {
+	// 			ok: true,
+	// 			_mark: std::marker::PhantomData,
+	// 		}),
+	// 		peer_set_handle,
+	// 	);
+	// 	sender.inject_connected(PeerId::random());
 
-		sender.request(request).unwrap();
-		let sender::OutEvent::SendRequest { pending_response, request, .. } = block_on(sender.next()).unwrap();
-		let (tx, rx) = oneshot::channel();
-		block_on(protocol_config.inbound_queue.unwrap().send(IncomingRequest {
-			peer: PeerId::random(),
-			payload: request,
-			pending_response: tx,
-		})).unwrap();
-		pool.spawner().spawn_obj(async move {
-			pending_response.send(Ok(rx.await.unwrap().result.unwrap())).unwrap();
-		}.boxed().into()).unwrap();
+	// 	sender.request(request).unwrap();
+	// 	let sender::OutEvent::SendRequest { pending_response, request, .. } = block_on(sender.next()).unwrap();
+	// 	let (tx, rx) = oneshot::channel();
+	// 	block_on(protocol_config.inbound_queue.unwrap().send(IncomingRequest {
+	// 		peer: PeerId::random(),
+	// 		payload: request,
+	// 		pending_response: tx,
+	// 	})).unwrap();
+	// 	pool.spawner().spawn_obj(async move {
+	// 		pending_response.send(Ok(rx.await.unwrap().result.unwrap())).unwrap();
+	// 	}.boxed().into()).unwrap();
 
-		pool.spawner().spawn_obj(sender.for_each(|_| future::ready(())).boxed().into()).unwrap();
-	}
+	// 	pool.spawner().spawn_obj(sender.for_each(|_| future::ready(())).boxed().into()).unwrap();
+	// }
 
-	#[test]
-	fn send_receive_call() {
-		let chan = oneshot::channel();
-		let request = light::RemoteCallRequest {
-			block: Default::default(),
-			header: dummy_header(),
-			method: "test".into(),
-			call_data: vec![],
-			retry_count: None,
-		};
+	// #[test]
+	// fn send_receive_call() {
+	// 	let chan = oneshot::channel();
+	// 	let request = light::RemoteCallRequest {
+	// 		block: Default::default(),
+	// 		header: dummy_header(),
+	// 		method: "test".into(),
+	// 		call_data: vec![],
+	// 		retry_count: None,
+	// 	};
 
-		let mut pool = LocalPool::new();
-		send_receive(sender::Request::Call {
-			request,
-			sender: chan.0,
-		}, &pool);
-		assert_eq!(vec![42], pool.run_until(chan.1).unwrap().unwrap());
-		//              ^--- from `DummyFetchChecker::check_execution_proof`
-	}
+	// 	let mut pool = LocalPool::new();
+	// 	send_receive(sender::Request::Call {
+	// 		request,
+	// 		sender: chan.0,
+	// 	}, &pool);
+	// 	assert_eq!(vec![42], pool.run_until(chan.1).unwrap().unwrap());
+	// 	//              ^--- from `DummyFetchChecker::check_execution_proof`
+	// }
 
-	#[test]
-	fn send_receive_read() {
-		let chan = oneshot::channel();
-		let request = light::RemoteReadRequest {
-			header: dummy_header(),
-			block: Default::default(),
-			keys: vec![b":key".to_vec()],
-			retry_count: None,
-		};
-		let mut pool = LocalPool::new();
-		send_receive(sender::Request::Read {
-			request,
-			sender: chan.0,
-		}, &pool);
-		assert_eq!(
-			Some(vec![42]),
-			pool.run_until(chan.1)
-				.unwrap()
-				.unwrap()
-				.remove(&b":key"[..])
-				.unwrap()
-		);
-		//                   ^--- from `DummyFetchChecker::check_read_proof`
-	}
+	// #[test]
+	// fn send_receive_read() {
+	// 	let chan = oneshot::channel();
+	// 	let request = light::RemoteReadRequest {
+	// 		header: dummy_header(),
+	// 		block: Default::default(),
+	// 		keys: vec![b":key".to_vec()],
+	// 		retry_count: None,
+	// 	};
+	// 	let mut pool = LocalPool::new();
+	// 	send_receive(sender::Request::Read {
+	// 		request,
+	// 		sender: chan.0,
+	// 	}, &pool);
+	// 	assert_eq!(
+	// 		Some(vec![42]),
+	// 		pool.run_until(chan.1)
+	// 			.unwrap()
+	// 			.unwrap()
+	// 			.remove(&b":key"[..])
+	// 			.unwrap()
+	// 	);
+	// 	//                   ^--- from `DummyFetchChecker::check_read_proof`
+	// }
 
-	#[test]
-	fn send_receive_read_child() {
-		let chan = oneshot::channel();
-		let child_info = ChildInfo::new_default(&b":child_storage:default:sub"[..]);
-		let request = light::RemoteReadChildRequest {
-			header: dummy_header(),
-			block: Default::default(),
-			storage_key: child_info.prefixed_storage_key(),
-			keys: vec![b":key".to_vec()],
-			retry_count: None,
-		};
-		let mut pool = LocalPool::new();
-		send_receive(sender::Request::ReadChild {
-			request,
-			sender: chan.0,
-		}, &pool);
-		assert_eq!(
-			Some(vec![42]),
-			pool.run_until(chan.1)
-				.unwrap()
-				.unwrap()
-				.remove(&b":key"[..])
-				.unwrap()
-		);
-		//                   ^--- from `DummyFetchChecker::check_read_child_proof`
-	}
+	// #[test]
+	// fn send_receive_read_child() {
+	// 	let chan = oneshot::channel();
+	// 	let child_info = ChildInfo::new_default(&b":child_storage:default:sub"[..]);
+	// 	let request = light::RemoteReadChildRequest {
+	// 		header: dummy_header(),
+	// 		block: Default::default(),
+	// 		storage_key: child_info.prefixed_storage_key(),
+	// 		keys: vec![b":key".to_vec()],
+	// 		retry_count: None,
+	// 	};
+	// 	let mut pool = LocalPool::new();
+	// 	send_receive(sender::Request::ReadChild {
+	// 		request,
+	// 		sender: chan.0,
+	// 	}, &pool);
+	// 	assert_eq!(
+	// 		Some(vec![42]),
+	// 		pool.run_until(chan.1)
+	// 			.unwrap()
+	// 			.unwrap()
+	// 			.remove(&b":key"[..])
+	// 			.unwrap()
+	// 	);
+	// 	//                   ^--- from `DummyFetchChecker::check_read_child_proof`
+	// }
 
-	#[test]
-	fn send_receive_header() {
-		sp_tracing::try_init_simple();
-		let chan = oneshot::channel();
-		let request = light::RemoteHeaderRequest {
-			cht_root: Default::default(),
-			block: 1,
-			retry_count: None,
-		};
-		let mut pool = LocalPool::new();
-		send_receive(sender::Request::Header {
-			request,
-			sender: chan.0,
-		}, &pool);
-		// The remote does not know block 1:
-		assert_matches!(
-			pool.run_until(chan.1).unwrap(),
-			Err(ClientError::RemoteFetchFailed)
-		);
-	}
+	// #[test]
+	// fn send_receive_header() {
+	// 	sp_tracing::try_init_simple();
+	// 	let chan = oneshot::channel();
+	// 	let request = light::RemoteHeaderRequest {
+	// 		cht_root: Default::default(),
+	// 		block: 1,
+	// 		retry_count: None,
+	// 	};
+	// 	let mut pool = LocalPool::new();
+	// 	send_receive(sender::Request::Header {
+	// 		request,
+	// 		sender: chan.0,
+	// 	}, &pool);
+	// 	// The remote does not know block 1:
+	// 	assert_matches!(
+	// 		pool.run_until(chan.1).unwrap(),
+	// 		Err(ClientError::RemoteFetchFailed)
+	// 	);
+	// }
 
-	#[test]
-	fn send_receive_changes() {
-		let chan = oneshot::channel();
-		let request = light::RemoteChangesRequest {
-			changes_trie_configs: vec![sp_core::ChangesTrieConfigurationRange {
-				zero: (0, Default::default()),
-				end: None,
-				config: Some(sp_core::ChangesTrieConfiguration::new(4, 2)),
-			}],
-			first_block: (1, Default::default()),
-			last_block: (100, Default::default()),
-			max_block: (100, Default::default()),
-			tries_roots: (1, Default::default(), Vec::new()),
-			key: Vec::new(),
-			storage_key: None,
-			retry_count: None,
-		};
-		let mut pool = LocalPool::new();
-		send_receive(sender::Request::Changes {
-			request,
-			sender: chan.0,
-		}, &pool);
-		assert_eq!(vec![(100, 2)], pool.run_until(chan.1).unwrap().unwrap());
-		//              ^--- from `DummyFetchChecker::check_changes_proof`
-	}
+	// #[test]
+	// fn send_receive_changes() {
+	// 	let chan = oneshot::channel();
+	// 	let request = light::RemoteChangesRequest {
+	// 		changes_trie_configs: vec![ap_core::ChangesTrieConfigurationRange {
+	// 			zero: (0, Default::default()),
+	// 			end: None,
+	// 			config: Some(ap_core::ChangesTrieConfiguration::new(4, 2)),
+	// 		}],
+	// 		first_block: (1, Default::default()),
+	// 		last_block: (100, Default::default()),
+	// 		max_block: (100, Default::default()),
+	// 		tries_roots: (1, Default::default(), Vec::new()),
+	// 		key: Vec::new(),
+	// 		storage_key: None,
+	// 		retry_count: None,
+	// 	};
+	// 	let mut pool = LocalPool::new();
+	// 	send_receive(sender::Request::Changes {
+	// 		request,
+	// 		sender: chan.0,
+	// 	}, &pool);
+	// 	assert_eq!(vec![(100, 2)], pool.run_until(chan.1).unwrap().unwrap());
+	// 	//              ^--- from `DummyFetchChecker::check_changes_proof`
+	// }
 }

@@ -25,4 +25,4 @@ pub use self::handler::{NotifsHandlerError, NotificationsSink, Ready};
 mod behaviour;
 mod handler;
 mod upgrade;
-mod tests;
+// mod tests;

@@ -17,7 +17,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::{
-	chain::Client,
+	// chain::Client,
 	config::{self, ProtocolId},
 	error,
 	request_responses::RequestFailure,
@@ -34,7 +34,7 @@ use libp2p::swarm::{NetworkBehaviour, NetworkBehaviourAction, PollParameters};
 use libp2p::swarm::{ProtocolsHandler, IntoProtocolsHandler};
 use libp2p::{Multiaddr, PeerId};
 use log::{log, Level, trace, debug, warn, error};
-use message::{BlockAnnounce, Message};
+// use message::{BlockAnnounce, Message};
 use message::generic::{Message as GenericMessage, Roles};
 use prometheus_endpoint::{Registry, Gauge, GaugeVec, PrometheusError, Opts, register, U64};
 use prost::Message as _;
@@ -77,7 +77,7 @@ const MAX_BLOCK_ANNOUNCE_SIZE: u64 = 1024 * 1024;
 pub(crate) const BLOCK_ANNOUNCES_TRANSACTIONS_SUBSTREAM_SIZE: u64 = 16 * 1024 * 1024;
 
 /// Identifier of the peerset for the block announces protocol.
-const HARDCODED_PEERSETS_SYNC: sc_peerset::SetId = sc_peerset::SetId::from(0);
+const HARDCODED_PEERSETS_SYNC: ac_peerset::SetId = ac_peerset::SetId::from(0);
 /// Number of hardcoded peersets (the constants right above). Any set whose identifier is equal or
 /// superior to this value corresponds to a user-defined protocol.
 const NUM_HARDCODED_PEERSETS: usize = 1;
@@ -88,7 +88,7 @@ const NUM_HARDCODED_PEERSETS: usize = 1;
 const LIGHT_MAXIMAL_BLOCKS_DIFFERENCE: u64 = 8192;
 
 mod rep {
-	use sc_peerset::ReputationChange as Rep;
+	use ac_peerset::ReputationChange as Rep;
 	/// Reputation change when a peer doesn't respond in time to our messages.
 	pub const TIMEOUT: Rep = Rep::new(-(1 << 10), "Request timeout");
 	/// Reputation change when a peer refuses a request.
@@ -144,24 +144,24 @@ impl Metrics {
 }
 
 // Lock must always be taken in order declared here.
-pub struct Protocol<B: BlockT> {
+pub struct Protocol {
 	/// Interval at which we call `tick`.
 	tick_timeout: Pin<Box<dyn Stream<Item = ()> + Send>>,
 	/// Pending list of messages to return from `poll` as a priority.
-	pending_messages: VecDeque<CustomMessageOutcome<B>>,
+	pending_messages: VecDeque<CustomMessageOutcome>,
 	config: ProtocolConfig,
-	genesis_hash: B::Hash,
+	// genesis_hash: B::Hash,
 	// sync: ChainSync<B>,
 	// All connected peers
-	peers: HashMap<PeerId, Peer<B>>,
-	chain: Arc<dyn Client<B>>,
+	peers: HashMap<PeerId, Peer>,
+	// chain: Arc<dyn Client<B>>,
 	/// List of nodes for which we perform additional logging because they are important for the
 	/// user.
 	important_peers: HashSet<PeerId>,
 	/// Used to report reputation changes.
-	peerset_handle: sc_peerset::PeersetHandle,
+	peerset_handle: ac_peerset::PeersetHandle,
 	/// Handles opening the unique substream and sending and receiving raw messages.
-	behaviour: Notifications,
+	// behaviour: Notifications,
 	/// List of notifications protocols that have been registered.
 	notification_protocols: Vec<Cow<'static, str>>,
 	/// If we receive a new "substream open" event that contains an invalid handshake, we ask the
@@ -170,37 +170,37 @@ pub struct Protocol<B: BlockT> {
 	/// event to the outer layers, we also shouldn't propagate this "substream closed" event. To
 	/// solve this, an entry is added to this map whenever an invalid handshake is received.
 	/// Entries are removed when the corresponding "substream closed" is later received.
-	bad_handshake_substreams: HashSet<(PeerId, sc_peerset::SetId)>,
+	bad_handshake_substreams: HashSet<(PeerId, ac_peerset::SetId)>,
 	/// Prometheus metrics.
 	metrics: Option<Metrics>,
 	/// The `PeerId`'s of all boot nodes.
 	boot_node_ids: HashSet<PeerId>,
-	/// A cache for the data that was associated to a block announcement.
-	block_announce_data_cache: lru::LruCache<B::Hash, Vec<u8>>,
+	//// A cache for the data that was associated to a block announcement.
+	// block_announce_data_cache: lru::LruCache<B::Hash, Vec<u8>>,
 }
 
 /// Peer information
 #[derive(Debug)]
-struct Peer<B: BlockT> {
-	info: PeerInfo<B>,
-	/// Current block request, if any. Started by emitting [`CustomMessageOutcome::BlockRequest`].
-	block_request: Option<(
-		message::BlockRequest<B>,
-		oneshot::Receiver<Result<Vec<u8>, RequestFailure>>,
-	)>,
-	/// Holds a set of blocks known to this peer.
-	known_blocks: LruHashSet<B::Hash>,
+struct Peer {
+	info: PeerInfo,
+	//// Current block request, if any. Started by emitting [`CustomMessageOutcome::BlockRequest`].
+	// block_request: Option<(
+	// 	message::BlockRequest<B>,
+	// 	oneshot::Receiver<Result<Vec<u8>, RequestFailure>>,
+	// )>,
+	//// Holds a set of blocks known to this peer.
+	// known_blocks: LruHashSet<B::Hash>,
 }
 
 /// Info about a peer's known state.
 #[derive(Clone, Debug)]
-pub struct PeerInfo<B: BlockT> {
+pub struct PeerInfo {
 	/// Roles
 	pub roles: Roles,
-	/// Peer best block hash
-	pub best_hash: B::Hash,
-	/// Peer best block number
-	pub best_number: <B::Header as HeaderT>::Number,
+	//// Peer best block hash
+	// pub best_hash: B::Hash,
+	//// Peer best block number
+	// pub best_number: <B::Header as HeaderT>::Number,
 }
 
 /// Configuration for the Substrate-specific part of the networking layer.
@@ -221,47 +221,47 @@ impl Default for ProtocolConfig {
 	}
 }
 
-/// Handshake sent when we open a block announces substream.
-#[derive(Debug, PartialEq, Eq, Clone, Encode, Decode)]
-struct BlockAnnouncesHandshake<B: BlockT> {
-	/// Roles of the node.
-	roles: Roles,
-	/// Best block number.
-	best_number: NumberFor<B>,
-	/// Best block hash.
-	best_hash: B::Hash,
-	/// Genesis block hash.
-	genesis_hash: B::Hash,
-}
+//// Handshake sent when we open a block announces substream.
+// #[derive(Debug, PartialEq, Eq, Clone, Encode, Decode)]
+// struct BlockAnnouncesHandshake<B: BlockT> {
+// 	/// Roles of the node.
+// 	roles: Roles,
+// 	/// Best block number.
+// 	best_number: NumberFor<B>,
+// 	/// Best block hash.
+// 	best_hash: B::Hash,
+// 	/// Genesis block hash.
+// 	genesis_hash: B::Hash,
+// }
 
-impl<B: BlockT> BlockAnnouncesHandshake<B> {
-	fn build(
-		protocol_config: &ProtocolConfig,
-		best_number: NumberFor<B>,
-		best_hash: B::Hash,
-		genesis_hash: B::Hash,
-	) -> Self {
-		BlockAnnouncesHandshake {
-			genesis_hash,
-			roles: protocol_config.roles,
-			best_number,
-			best_hash,
-		}
-	}
-}
+// impl<B: BlockT> BlockAnnouncesHandshake<B> {
+// 	fn build(
+// 		protocol_config: &ProtocolConfig,
+// 		best_number: NumberFor<B>,
+// 		best_hash: B::Hash,
+// 		genesis_hash: B::Hash,
+// 	) -> Self {
+// 		BlockAnnouncesHandshake {
+// 			genesis_hash,
+// 			roles: protocol_config.roles,
+// 			best_number,
+// 			best_hash,
+// 		}
+// 	}
+// }
 
-impl<B: BlockT> Protocol<B> {
+impl Protocol {
 	/// Create a new instance.
 	pub fn new(
 		config: ProtocolConfig,
-		chain: Arc<dyn Client<B>>,
+		// chain: Arc<dyn Client<B>>,
 		protocol_id: ProtocolId,
 		network_config: &config::NetworkConfiguration,
 		notifications_protocols_handshakes: Vec<Vec<u8>>,
 		// block_announce_validator: Box<dyn BlockAnnounceValidator<B> + Send>,
 		metrics_registry: Option<&Registry>,
-	) -> error::Result<(Protocol<B>, sc_peerset::PeersetHandle, Vec<(PeerId, Multiaddr)>)> {
-		let info = chain.info();
+	) -> error::Result<(Protocol, ac_peerset::PeersetHandle, Vec<(PeerId, Multiaddr)>)> {
+		// let info = chain.info();
 		// let sync = ChainSync::new(
 		// 	config.roles,
 		// 	chain.clone(),
@@ -309,7 +309,7 @@ impl<B: BlockT> Protocol<B> {
 			}
 
 			// Set number 0 is used for block announces.
-			sets.push(sc_peerset::SetConfig {
+			sets.push(ac_peerset::SetConfig {
 				in_peers: network_config.default_peers_set.in_peers,
 				out_peers: network_config.default_peers_set.out_peers,
 				bootnodes,
@@ -328,7 +328,7 @@ impl<B: BlockT> Protocol<B> {
 				let reserved_only =
 					set_cfg.set_config.non_reserved_mode == config::NonReservedPeerMode::Deny;
 
-				sets.push(sc_peerset::SetConfig {
+				sets.push(ac_peerset::SetConfig {
 					in_peers: set_cfg.set_config.in_peers,
 					out_peers: set_cfg.set_config.out_peers,
 					bootnodes: Vec::new(),
@@ -337,7 +337,7 @@ impl<B: BlockT> Protocol<B> {
 				});
 			}
 
-			sc_peerset::Peerset::from_config(sc_peerset::PeersetConfig {
+			ac_peerset::Peerset::from_config(ac_peerset::PeersetConfig {
 				sets,
 			})
 		};
@@ -350,44 +350,44 @@ impl<B: BlockT> Protocol<B> {
 			proto
 		});
 
-		let behaviour = {
-			let best_number = info.best_number;
-			let best_hash = info.best_hash;
-			let genesis_hash = info.genesis_hash;
+		// let behaviour = {
+		// 	let best_number = info.best_number;
+		// 	let best_hash = info.best_hash;
+		// 	let genesis_hash = info.genesis_hash;
 
-			let block_announces_handshake = BlockAnnouncesHandshake::<B>::build(
-				&config,
-				best_number,
-				best_hash,
-				genesis_hash,
-			).encode();
+		// 	let block_announces_handshake = BlockAnnouncesHandshake::<B>::build(
+		// 		&config,
+		// 		best_number,
+		// 		best_hash,
+		// 		genesis_hash,
+		// 	).encode();
 
-			Notifications::new(
-				peerset,
-				iter::once((block_announces_protocol, block_announces_handshake, MAX_BLOCK_ANNOUNCE_SIZE))
-					.chain(network_config.extra_sets.iter()
-						.zip(notifications_protocols_handshakes)
-						.map(|(s, hs)| (s.notifications_protocol.clone(), hs, s.max_notification_size))
-					),
-			)
-		};
+		// 	Notifications::new(
+		// 		peerset,
+		// 		iter::once((block_announces_protocol, block_announces_handshake, MAX_BLOCK_ANNOUNCE_SIZE))
+		// 			.chain(network_config.extra_sets.iter()
+		// 				.zip(notifications_protocols_handshakes)
+		// 				.map(|(s, hs)| (s.notifications_protocol.clone(), hs, s.max_notification_size))
+		// 			),
+		// 	)
+		// };
 
-		let block_announce_data_cache = lru::LruCache::new(
-			network_config.default_peers_set.in_peers as usize
-				+ network_config.default_peers_set.out_peers as usize,
-		);
+		// let block_announce_data_cache = lru::LruCache::new(
+		// 	network_config.default_peers_set.in_peers as usize
+		// 		+ network_config.default_peers_set.out_peers as usize,
+		// );
 
 		let protocol = Protocol {
 			tick_timeout: Box::pin(interval(TICK_TIMEOUT)),
 			pending_messages: VecDeque::new(),
 			config,
 			peers: HashMap::new(),
-			chain,
-			genesis_hash: info.genesis_hash,
+			// chain,
+			// genesis_hash: info.genesis_hash,
 			// sync,
 			important_peers,
 			peerset_handle: peerset_handle.clone(),
-			behaviour,
+			// behaviour,
 			notification_protocols:
 				network_config.extra_sets.iter().map(|s| s.notifications_protocol.clone()).collect(),
 			bad_handshake_substreams: Default::default(),
@@ -397,7 +397,7 @@ impl<B: BlockT> Protocol<B> {
 				None
 			},
 			boot_node_ids,
-			block_announce_data_cache,
+			// block_announce_data_cache,
 		};
 
 		Ok((protocol, peerset_handle, known_addresses))
@@ -422,7 +422,7 @@ impl<B: BlockT> Protocol<B> {
 	/// Disconnects the given peer if we are connected to it.
 	pub fn disconnect_peer(&mut self, peer_id: &PeerId, protocol_name: &str) {
 		if let Some(position) = self.notification_protocols.iter().position(|p| *p == protocol_name) {
-			self.behaviour.disconnect_peer(peer_id, sc_peerset::SetId::from(position + NUM_HARDCODED_PEERSETS));
+			self.behaviour.disconnect_peer(peer_id, ac_peerset::SetId::from(position + NUM_HARDCODED_PEERSETS));
 		} else {
 			log::warn!(target: "sub-libp2p", "disconnect_peer() with invalid protocol name")
 		}
@@ -442,7 +442,7 @@ impl<B: BlockT> Protocol<B> {
 	pub fn num_active_peers(&self) -> usize {
 		self.peers
 			.values()
-			.filter(|p| p.block_request.is_some())
+			// .filter(|p| p.block_request.is_some())
 			.count()
 	}
 
@@ -451,30 +451,30 @@ impl<B: BlockT> Protocol<B> {
 	// 	self.sync.status().state
 	// }
 
-	/// Target sync block number.
-	pub fn best_seen_block(&self) -> Option<NumberFor<B>> {
-		self.sync.status().best_seen_block
-	}
+	// / Target sync block number.
+	// pub fn best_seen_block(&self) -> Option<NumberFor<B>> {
+	// 	self.sync.status().best_seen_block
+	// }
 
-	/// Number of peers participating in syncing.
-	pub fn num_sync_peers(&self) -> u32 {
-		self.sync.status().num_peers
-	}
+	// / Number of peers participating in syncing.
+	// pub fn num_sync_peers(&self) -> u32 {
+	// 	self.sync.status().num_peers
+	// }
 
-	/// Number of blocks in the import queue.
-	pub fn num_queued_blocks(&self) -> u32 {
-		self.sync.status().queued_blocks
-	}
+	// / Number of blocks in the import queue.
+	// pub fn num_queued_blocks(&self) -> u32 {
+	// 	self.sync.status().queued_blocks
+	// }
 
-	/// Number of downloaded blocks.
-	pub fn num_downloaded_blocks(&self) -> usize {
-		self.sync.num_downloaded_blocks()
-	}
+	// / Number of downloaded blocks.
+	// pub fn num_downloaded_blocks(&self) -> usize {
+	// 	self.sync.num_downloaded_blocks()
+	// }
 
-	/// Number of active sync requests.
-	pub fn num_sync_requests(&self) -> usize {
-		self.sync.num_sync_requests()
-	}
+	// / Number of active sync requests.
+	// pub fn num_sync_requests(&self) -> usize {
+	// 	self.sync.num_sync_requests()
+	// }
 
 	//// Inform sync about new best imported block.
 	// pub fn new_best_block_imported(&mut self, hash: B::Hash, number: NumberFor<B>) {
@@ -493,27 +493,27 @@ impl<B: BlockT> Protocol<B> {
 	// 	);
 	// }
 
-	fn update_peer_info(&mut self, who: &PeerId) {
-		if let Some(info) = self.sync.peer_info(who) {
-			if let Some(ref mut peer) = self.peers.get_mut(who) {
-				peer.info.best_hash = info.best_hash;
-				peer.info.best_number = info.best_number;
-			}
-		}
-	}
+	// fn update_peer_info(&mut self, who: &PeerId) {
+	// 	if let Some(info) = self.sync.peer_info(who) {
+	// 		if let Some(ref mut peer) = self.peers.get_mut(who) {
+	// 			peer.info.best_hash = info.best_hash;
+	// 			peer.info.best_number = info.best_number;
+	// 		}
+	// 	}
+	// }
 
 	/// Returns information about all the peers we are connected to after the handshake message.
-	pub fn peers_info(&self) -> impl Iterator<Item = (&PeerId, &PeerInfo<B>)> {
+	pub fn peers_info(&self) -> impl Iterator<Item = (&PeerId, &PeerInfo)> {
 		self.peers.iter().map(|(id, peer)| (id, &peer.info))
 	}
 
-	fn prepare_block_request(
-		&mut self,
-		who: PeerId,
-		request: message::BlockRequest<B>,
-	) -> CustomMessageOutcome<B> {
-		prepare_block_request::<B>(&mut self.peers, who, request)
-	}
+	// fn prepare_block_request(
+	// 	&mut self,
+	// 	who: PeerId,
+	// 	request: message::BlockRequest<B>,
+	// ) -> CustomMessageOutcome<B> {
+	// 	prepare_block_request::<B>(&mut self.peers, who, request)
+	// }
 
 	/// Called by peer when it is disconnecting.
 	///
@@ -536,7 +536,7 @@ impl<B: BlockT> Protocol<B> {
 	}
 
 	/// Adjusts the reputation of a node.
-	pub fn report_peer(&self, who: PeerId, reputation: sc_peerset::ReputationChange) {
+	pub fn report_peer(&self, who: PeerId, reputation: ac_peerset::ReputationChange) {
 		self.peerset_handle.report_peer(who, reputation)
 	}
 
@@ -646,109 +646,109 @@ impl<B: BlockT> Protocol<B> {
 		self.report_metrics()
 	}
 
-	/// Called on the first connection between two peers on the default set, after their exchange
-	/// of handshake.
-	///
-	/// Returns `Ok` if the handshake is accepted and the peer added to the list of peers we sync
-	/// from.
-	fn on_sync_peer_connected(
-		&mut self,
-		who: PeerId,
-		status: BlockAnnouncesHandshake<B>,
-	) -> Result<(), ()> {
-		trace!(target: "sync", "New peer {} {:?}", who, status);
+	// / Called on the first connection between two peers on the default set, after their exchange
+	// / of handshake.
+	// /
+	// / Returns `Ok` if the handshake is accepted and the peer added to the list of peers we sync
+	// / from.
+	// fn on_sync_peer_connected(
+	// 	&mut self,
+	// 	who: PeerId,
+	// 	// status: BlockAnnouncesHandshake<B>,
+	// ) -> Result<(), ()> {
+	// 	trace!(target: "sync", "New peer {}", who);
 
-		if self.peers.contains_key(&who) {
-			log::error!(target: "sync", "Called on_sync_peer_connected with already connected peer {}", who);
-			debug_assert!(false);
-			return Err(());
-		}
+	// 	if self.peers.contains_key(&who) {
+	// 		log::error!(target: "sync", "Called on_sync_peer_connected with already connected peer {}", who);
+	// 		debug_assert!(false);
+	// 		return Err(());
+	// 	}
 
-		if status.genesis_hash != self.genesis_hash {
-			log!(
-				target: "sync",
-				if self.important_peers.contains(&who) { Level::Warn } else { Level::Debug },
-				"Peer is on different chain (our genesis: {} theirs: {})",
-				self.genesis_hash, status.genesis_hash
-			);
-			self.peerset_handle.report_peer(who.clone(), rep::GENESIS_MISMATCH);
-			self.behaviour.disconnect_peer(&who, HARDCODED_PEERSETS_SYNC);
+	// 	// if status.genesis_hash != self.genesis_hash {
+	// 	// 	log!(
+	// 	// 		target: "sync",
+	// 	// 		if self.important_peers.contains(&who) { Level::Warn } else { Level::Debug },
+	// 	// 		"Peer is on different chain (our genesis: {} theirs: {})",
+	// 	// 		self.genesis_hash, status.genesis_hash
+	// 	// 	);
+	// 	// 	self.peerset_handle.report_peer(who.clone(), rep::GENESIS_MISMATCH);
+	// 	// 	self.behaviour.disconnect_peer(&who, HARDCODED_PEERSETS_SYNC);
 
-			if self.boot_node_ids.contains(&who) {
-				error!(
-					target: "sync",
-					"Bootnode with peer id `{}` is on a different chain (our genesis: {} theirs: {})",
-					who,
-					self.genesis_hash,
-					status.genesis_hash,
-				);
-			}
+	// 	// 	if self.boot_node_ids.contains(&who) {
+	// 	// 		error!(
+	// 	// 			target: "sync",
+	// 	// 			"Bootnode with peer id `{}` is on a different chain (our genesis: {} theirs: {})",
+	// 	// 			who,
+	// 	// 			self.genesis_hash,
+	// 	// 			status.genesis_hash,
+	// 	// 		);
+	// 	// 	}
 
-			return Err(());
-		}
+	// 	// 	return Err(());
+	// 	// }
 
-		if self.config.roles.is_light() {
-			// we're not interested in light peers
-			if status.roles.is_light() {
-				debug!(target: "sync", "Peer {} is unable to serve light requests", who);
-				self.peerset_handle.report_peer(who.clone(), rep::BAD_ROLE);
-				self.behaviour.disconnect_peer(&who, HARDCODED_PEERSETS_SYNC);
-				return Err(());
-			}
+	// 	if self.config.roles.is_light() {
+	// 		// we're not interested in light peers
+	// 		// if status.roles.is_light() {
+	// 		// 	debug!(target: "sync", "Peer {} is unable to serve light requests", who);
+	// 		// 	self.peerset_handle.report_peer(who.clone(), rep::BAD_ROLE);
+	// 		// 	self.behaviour.disconnect_peer(&who, HARDCODED_PEERSETS_SYNC);
+	// 		// 	return Err(());
+	// 		// }
 
-			// we don't interested in peers that are far behind us
-			let self_best_block = self
-				.chain
-				.info()
-				.best_number;
-			let blocks_difference = self_best_block
-				.checked_sub(&status.best_number)
-				.unwrap_or_else(Zero::zero)
-				.saturated_into::<u64>();
-			if blocks_difference > LIGHT_MAXIMAL_BLOCKS_DIFFERENCE {
-				debug!(target: "sync", "Peer {} is far behind us and will unable to serve light requests", who);
-				self.peerset_handle.report_peer(who.clone(), rep::PEER_BEHIND_US_LIGHT);
-				self.behaviour.disconnect_peer(&who, HARDCODED_PEERSETS_SYNC);
-				return Err(());
-			}
-		}
+	// 		// we don't interested in peers that are far behind us
+	// 		// let self_best_block = self
+	// 		// 	.chain
+	// 		// 	.info()
+	// 		// 	.best_number;
+	// 		// let blocks_difference = self_best_block
+	// 		// 	.checked_sub(&status.best_number)
+	// 		// 	.unwrap_or_else(Zero::zero)
+	// 		// 	.saturated_into::<u64>();
+	// 		// if blocks_difference > LIGHT_MAXIMAL_BLOCKS_DIFFERENCE {
+	// 		// 	debug!(target: "sync", "Peer {} is far behind us and will unable to serve light requests", who);
+	// 		// 	self.peerset_handle.report_peer(who.clone(), rep::PEER_BEHIND_US_LIGHT);
+	// 		// 	self.behaviour.disconnect_peer(&who, HARDCODED_PEERSETS_SYNC);
+	// 		// 	return Err(());
+	// 		// }
+	// 	}
 
-		let peer = Peer {
-			info: PeerInfo {
-				roles: status.roles,
-				best_hash: status.best_hash,
-				best_number: status.best_number
-			},
-			block_request: None,
-			known_blocks: LruHashSet::new(NonZeroUsize::new(MAX_KNOWN_BLOCKS)
-				.expect("Constant is nonzero")),
-		};
+	// 	let peer = Peer {
+	// 		info: PeerInfo {
+	// 			roles: status.roles,
+	// 			// best_hash: status.best_hash,
+	// 			// best_number: status.best_number
+	// 		},
+	// 		// block_request: None,
+	// 		// known_blocks: LruHashSet::new(NonZeroUsize::new(MAX_KNOWN_BLOCKS)
+	// 		// 	.expect("Constant is nonzero")),
+	// 	};
 
-		// let req = if peer.info.roles.is_full() {
-		// 	match self.sync.new_peer(who.clone(), peer.info.best_hash, peer.info.best_number) {
-		// 		Ok(req) => req,
-		// 		Err(sync::BadPeer(id, repu)) => {
-		// 			self.behaviour.disconnect_peer(&id, HARDCODED_PEERSETS_SYNC);
-		// 			self.peerset_handle.report_peer(id, repu);
-		// 			return Err(())
-		// 		}
-		// 	}
-		// } else {
-		// 	None
-		// };
+	// 	// let req = if peer.info.roles.is_full() {
+	// 	// 	match self.sync.new_peer(who.clone(), peer.info.best_hash, peer.info.best_number) {
+	// 	// 		Ok(req) => req,
+	// 	// 		Err(sync::BadPeer(id, repu)) => {
+	// 	// 			self.behaviour.disconnect_peer(&id, HARDCODED_PEERSETS_SYNC);
+	// 	// 			self.peerset_handle.report_peer(id, repu);
+	// 	// 			return Err(())
+	// 	// 		}
+	// 	// 	}
+	// 	// } else {
+	// 	// 	None
+	// 	// };
 
-		debug!(target: "sync", "Connected {}", who);
+	// 	debug!(target: "sync", "Connected {}", who);
 
-		self.peers.insert(who.clone(), peer);
-		self.pending_messages.push_back(CustomMessageOutcome::PeerNewBest(who.clone(), status.best_number));
+	// 	self.peers.insert(who.clone(), peer);
+	// 	self.pending_messages.push_back(CustomMessageOutcome::PeerNewBest(who.clone(), status.best_number));
 
-		// if let Some(req) = req {
-		// 	let event = self.prepare_block_request(who.clone(), req);
-		// 	self.pending_messages.push_back(event);
-		// }
+	// 	// if let Some(req) = req {
+	// 	// 	let event = self.prepare_block_request(who.clone(), req);
+	// 	// 	self.pending_messages.push_back(event);
+	// 	// }
 
-		Ok(())
-	}
+	// 	Ok(())
+	// }
 
 	//// Make sure an important block is propagated to peers.
 	////
@@ -940,13 +940,13 @@ impl<B: BlockT> Protocol<B> {
 	// 	self.sync.on_block_finalized(&hash, *header.number())
 	// }
 
-	/// Request a justification for the given block.
-	///
-	/// Uses `protocol` to queue a new justification request and tries to dispatch all pending
-	/// requests.
-	pub fn request_justification(&mut self, hash: &B::Hash, number: NumberFor<B>) {
-		self.sync.request_justification(&hash, number)
-	}
+	// / Request a justification for the given block.
+	// /
+	// / Uses `protocol` to queue a new justification request and tries to dispatch all pending
+	// / requests.
+	// pub fn request_justification(&mut self, hash: &B::Hash, number: NumberFor<B>) {
+	// 	self.sync.request_justification(&hash, number)
+	// }
 
 	//// Request syncing for the given block from given set of peers.
 	//// Uses `protocol` to queue a new block download request and tries to dispatch all pending
@@ -984,19 +984,19 @@ impl<B: BlockT> Protocol<B> {
 	// 	}
 	// }
 
-	/// Call this when a justification has been processed by the import queue, with or without
-	/// errors.
-	pub fn justification_import_result(&mut self, who: PeerId, hash: B::Hash, number: NumberFor<B>, success: bool) {
-		self.sync.on_justification_import(hash, number, success);
-		if !success {
-			log::info!("💔 Invalid justification provided by {} for #{}", who, hash);
-			self.behaviour.disconnect_peer(&who, HARDCODED_PEERSETS_SYNC);
-			self.peerset_handle.report_peer(
-				who,
-				sc_peerset::ReputationChange::new_fatal("Invalid justification")
-			);
-		}
-	}
+	// / Call this when a justification has been processed by the import queue, with or without
+	// / errors.
+	// pub fn justification_import_result(&mut self, who: PeerId, hash: B::Hash, number: NumberFor<B>, success: bool) {
+	// 	self.sync.on_justification_import(hash, number, success);
+	// 	if !success {
+	// 		log::info!("💔 Invalid justification provided by {} for #{}", who, hash);
+	// 		self.behaviour.disconnect_peer(&who, HARDCODED_PEERSETS_SYNC);
+	// 		self.peerset_handle.report_peer(
+	// 			who,
+	// 			sc_peerset::ReputationChange::new_fatal("Invalid justification")
+	// 		);
+	// 	}
+	// }
 
 	/// Set whether the syncing peers set is in reserved-only mode.
 	pub fn set_reserved_only(&self, reserved_only: bool) {
@@ -1021,7 +1021,7 @@ impl<B: BlockT> Protocol<B> {
 	/// Removes a `PeerId` from the list of reserved peers.
 	pub fn remove_set_reserved_peer(&self, protocol: Cow<'static, str>, peer: PeerId) {
 		if let Some(index) = self.notification_protocols.iter().position(|p| *p == protocol) {
-			self.peerset_handle.remove_reserved_peer(sc_peerset::SetId::from(index + NUM_HARDCODED_PEERSETS), peer);
+			self.peerset_handle.remove_reserved_peer(ac_peerset::SetId::from(index + NUM_HARDCODED_PEERSETS), peer);
 		} else {
 			log::error!(
 				target: "sub-libp2p",
@@ -1034,7 +1034,7 @@ impl<B: BlockT> Protocol<B> {
 	/// Adds a `PeerId` to the list of reserved peers.
 	pub fn add_set_reserved_peer(&self, protocol: Cow<'static, str>, peer: PeerId) {
 		if let Some(index) = self.notification_protocols.iter().position(|p| *p == protocol) {
-			self.peerset_handle.add_reserved_peer(sc_peerset::SetId::from(index + NUM_HARDCODED_PEERSETS), peer);
+			self.peerset_handle.add_reserved_peer(ac_peerset::SetId::from(index + NUM_HARDCODED_PEERSETS), peer);
 		} else {
 			log::error!(
 				target: "sub-libp2p",
@@ -1056,7 +1056,7 @@ impl<B: BlockT> Protocol<B> {
 	/// Add a peer to a peers set.
 	pub fn add_to_peers_set(&self, protocol: Cow<'static, str>, peer: PeerId) {
 		if let Some(index) = self.notification_protocols.iter().position(|p| *p == protocol) {
-			self.peerset_handle.add_to_peers_set(sc_peerset::SetId::from(index + NUM_HARDCODED_PEERSETS), peer);
+			self.peerset_handle.add_to_peers_set(ac_peerset::SetId::from(index + NUM_HARDCODED_PEERSETS), peer);
 		} else {
 			log::error!(
 				target: "sub-libp2p",
@@ -1069,7 +1069,7 @@ impl<B: BlockT> Protocol<B> {
 	/// Remove a peer from a peers set.
 	pub fn remove_from_peers_set(&self, protocol: Cow<'static, str>, peer: PeerId) {
 		if let Some(index) = self.notification_protocols.iter().position(|p| *p == protocol) {
-			self.peerset_handle.remove_from_peers_set(sc_peerset::SetId::from(index + NUM_HARDCODED_PEERSETS), peer);
+			self.peerset_handle.remove_from_peers_set(ac_peerset::SetId::from(index + NUM_HARDCODED_PEERSETS), peer);
 		} else {
 			log::error!(
 				target: "sub-libp2p",
@@ -1084,58 +1084,58 @@ impl<B: BlockT> Protocol<B> {
 			let n = u64::try_from(self.peers.len()).unwrap_or(std::u64::MAX);
 			metrics.peers.set(n);
 
-			let m = self.sync.metrics();
+			// let m = self.sync.metrics();
 
-			metrics.fork_targets.set(m.fork_targets.into());
-			metrics.queued_blocks.set(m.queued_blocks.into());
+			// metrics.fork_targets.set(m.fork_targets.into());
+			// metrics.queued_blocks.set(m.queued_blocks.into());
 
-			metrics.justifications.with_label_values(&["pending"])
-				.set(m.justifications.pending_requests.into());
-			metrics.justifications.with_label_values(&["active"])
-				.set(m.justifications.active_requests.into());
-			metrics.justifications.with_label_values(&["failed"])
-				.set(m.justifications.failed_requests.into());
-			metrics.justifications.with_label_values(&["importing"])
-				.set(m.justifications.importing_requests.into());
+			// metrics.justifications.with_label_values(&["pending"])
+			// 	.set(m.justifications.pending_requests.into());
+			// metrics.justifications.with_label_values(&["active"])
+			// 	.set(m.justifications.active_requests.into());
+			// metrics.justifications.with_label_values(&["failed"])
+			// 	.set(m.justifications.failed_requests.into());
+			// metrics.justifications.with_label_values(&["importing"])
+			// 	.set(m.justifications.importing_requests.into());
 		}
 	}
 }
 
-fn prepare_block_request<B: BlockT>(
-	peers: &mut HashMap<PeerId, Peer<B>>,
-	who: PeerId,
-	request: message::BlockRequest<B>,
-) -> CustomMessageOutcome<B> {
-	let (tx, rx) = oneshot::channel();
+// fn prepare_block_request<B: BlockT>(
+// 	peers: &mut HashMap<PeerId, Peer<B>>,
+// 	who: PeerId,
+// 	request: message::BlockRequest<B>,
+// ) -> CustomMessageOutcome<B> {
+// 	let (tx, rx) = oneshot::channel();
 
-	if let Some(ref mut peer) = peers.get_mut(&who) {
-		peer.block_request = Some((request.clone(), rx));
-	}
+// 	if let Some(ref mut peer) = peers.get_mut(&who) {
+// 		peer.block_request = Some((request.clone(), rx));
+// 	}
 
-	let request = crate::schema::v1::BlockRequest {
-		fields: request.fields.to_be_u32(),
-		from_block: match request.from {
-			message::FromBlock::Hash(h) =>
-				Some(crate::schema::v1::block_request::FromBlock::Hash(h.encode())),
-			message::FromBlock::Number(n) =>
-				Some(crate::schema::v1::block_request::FromBlock::Number(n.encode())),
-		},
-		to_block: request.to.map(|h| h.encode()).unwrap_or_default(),
-		direction: request.direction as i32,
-		max_blocks: request.max.unwrap_or(0),
-	};
+// 	let request = crate::schema::v1::BlockRequest {
+// 		fields: request.fields.to_be_u32(),
+// 		from_block: match request.from {
+// 			message::FromBlock::Hash(h) =>
+// 				Some(crate::schema::v1::block_request::FromBlock::Hash(h.encode())),
+// 			message::FromBlock::Number(n) =>
+// 				Some(crate::schema::v1::block_request::FromBlock::Number(n.encode())),
+// 		},
+// 		to_block: request.to.map(|h| h.encode()).unwrap_or_default(),
+// 		direction: request.direction as i32,
+// 		max_blocks: request.max.unwrap_or(0),
+// 	};
 
-	CustomMessageOutcome::BlockRequest {
-		target: who,
-		request: request,
-		pending_response: tx,
-	}
-}
+// 	CustomMessageOutcome::BlockRequest {
+// 		target: who,
+// 		request: request,
+// 		pending_response: tx,
+// 	}
+// }
 
 /// Outcome of an incoming custom message.
 #[derive(Debug)]
 #[must_use]
-pub enum CustomMessageOutcome<B: BlockT> {
+pub enum CustomMessageOutcome {
 	// BlockImport(BlockOrigin, Vec<IncomingBlock<B>>),
 	// JustificationImport(Origin, B::Hash, NumberFor<B>, Justifications),
 	/// Notification protocols have been opened with a remote.
@@ -1155,24 +1155,24 @@ pub enum CustomMessageOutcome<B: BlockT> {
 	NotificationStreamClosed { remote: PeerId, protocol: Cow<'static, str> },
 	/// Messages have been received on one or more notifications protocols.
 	NotificationsReceived { remote: PeerId, messages: Vec<(Cow<'static, str>, Bytes)> },
-	/// A new block request must be emitted.
-	BlockRequest {
-		target: PeerId,
-		request: crate::schema::v1::BlockRequest,
-		pending_response: oneshot::Sender<Result<Vec<u8>, RequestFailure>>,
-	},
-	/// Peer has a reported a new head of chain.
-	PeerNewBest(PeerId, NumberFor<B>),
-	/// Now connected to a new peer for syncing purposes.
-	SyncConnected(PeerId),
-	/// No longer connected to a peer for syncing purposes.
-	SyncDisconnected(PeerId),
+	// / A new block request must be emitted.
+	// BlockRequest {
+	// 	target: PeerId,
+	// 	request: crate::schema::v1::BlockRequest,
+	// 	pending_response: oneshot::Sender<Result<Vec<u8>, RequestFailure>>,
+	// },
+	//// Peer has a reported a new head of chain.
+	// PeerNewBest(PeerId, NumberFor<B>),
+	// / Now connected to a new peer for syncing purposes.
+	// SyncConnected(PeerId),
+	// / No longer connected to a peer for syncing purposes.
+	// SyncDisconnected(PeerId),
 	None,
 }
 
-impl<B: BlockT> NetworkBehaviour for Protocol<B> {
+impl NetworkBehaviour for Protocol {
 	type ProtocolsHandler = <Notifications as NetworkBehaviour>::ProtocolsHandler;
-	type OutEvent = CustomMessageOutcome<B>;
+	type OutEvent = CustomMessageOutcome;
 
 	fn new_handler(&mut self) -> Self::ProtocolsHandler {
 		self.behaviour.new_handler()
@@ -1222,99 +1222,99 @@ impl<B: BlockT> NetworkBehaviour for Protocol<B> {
 		}
 
 		// Check for finished outgoing requests.
-		let mut finished_block_requests = Vec::new();
-		for (id, peer) in self.peers.iter_mut() {
-			if let Peer { block_request: Some((_, pending_response)), .. } = peer {
-				match pending_response.poll_unpin(cx) {
-					Poll::Ready(Ok(Ok(resp))) => {
-						let (req, _) = peer.block_request.take().unwrap();
+		// let mut finished_block_requests = Vec::new();
+		// for (id, peer) in self.peers.iter_mut() {
+		// 	if let Peer { block_request: Some((_, pending_response)), .. } = peer {
+		// 		match pending_response.poll_unpin(cx) {
+		// 			Poll::Ready(Ok(Ok(resp))) => {
+		// 				let (req, _) = peer.block_request.take().unwrap();
 
-						let protobuf_response = match crate::schema::v1::BlockResponse::decode(&resp[..]) {
-							Ok(proto) => proto,
-							Err(e) => {
-								debug!(target: "sync", "Failed to decode block request to peer {:?}: {:?}.", id, e);
-								self.peerset_handle.report_peer(id.clone(), rep::BAD_MESSAGE);
-								self.behaviour.disconnect_peer(id, HARDCODED_PEERSETS_SYNC);
-								continue;
-							}
-						};
+		// 				let protobuf_response = match crate::schema::v1::BlockResponse::decode(&resp[..]) {
+		// 					Ok(proto) => proto,
+		// 					Err(e) => {
+		// 						debug!(target: "sync", "Failed to decode block request to peer {:?}: {:?}.", id, e);
+		// 						self.peerset_handle.report_peer(id.clone(), rep::BAD_MESSAGE);
+		// 						self.behaviour.disconnect_peer(id, HARDCODED_PEERSETS_SYNC);
+		// 						continue;
+		// 					}
+		// 				};
 
-						finished_block_requests.push((id.clone(), req, protobuf_response));
-					},
-					Poll::Ready(Ok(Err(e))) => {
-						peer.block_request.take();
-						debug!(target: "sync", "Block request to peer {:?} failed: {:?}.", id, e);
+		// 				finished_block_requests.push((id.clone(), req, protobuf_response));
+		// 			},
+		// 			Poll::Ready(Ok(Err(e))) => {
+		// 				peer.block_request.take();
+		// 				debug!(target: "sync", "Block request to peer {:?} failed: {:?}.", id, e);
 
-						match e {
-							RequestFailure::Network(OutboundFailure::Timeout) => {
-								self.peerset_handle.report_peer(id.clone(), rep::TIMEOUT);
-								self.behaviour.disconnect_peer(id, HARDCODED_PEERSETS_SYNC);
-							}
-							RequestFailure::Network(OutboundFailure::UnsupportedProtocols) => {
-								self.peerset_handle.report_peer(id.clone(), rep::BAD_PROTOCOL);
-								self.behaviour.disconnect_peer(id, HARDCODED_PEERSETS_SYNC);
-							}
-							RequestFailure::Network(OutboundFailure::DialFailure) => {
-								self.behaviour.disconnect_peer(id, HARDCODED_PEERSETS_SYNC);
-							}
-							RequestFailure::Refused => {
-								self.peerset_handle.report_peer(id.clone(), rep::REFUSED);
-								self.behaviour.disconnect_peer(id, HARDCODED_PEERSETS_SYNC);
-							}
-							RequestFailure::Network(OutboundFailure::ConnectionClosed)
-							| RequestFailure::NotConnected => {
-								self.behaviour.disconnect_peer(id, HARDCODED_PEERSETS_SYNC);
-							},
-							RequestFailure::UnknownProtocol => {
-								debug_assert!(false, "Block request protocol should always be known.");
-							}
-							RequestFailure::Obsolete => {
-								debug_assert!(
-									false,
-									"Can not receive `RequestFailure::Obsolete` after dropping the \
-									 response receiver.",
-								);
-							}
-						}
-					},
-					Poll::Ready(Err(oneshot::Canceled)) => {
-						peer.block_request.take();
-						trace!(
-							target: "sync",
-							"Block request to peer {:?} failed due to oneshot being canceled.",
-							id,
-						);
-						self.behaviour.disconnect_peer(id, HARDCODED_PEERSETS_SYNC);
-					},
-					Poll::Pending => {},
-				}
-			}
-		}
-		for (id, req, protobuf_response) in finished_block_requests {
-			let ev = self.on_block_response(id, req, protobuf_response);
-			self.pending_messages.push_back(ev);
-		}
+		// 				match e {
+		// 					RequestFailure::Network(OutboundFailure::Timeout) => {
+		// 						self.peerset_handle.report_peer(id.clone(), rep::TIMEOUT);
+		// 						self.behaviour.disconnect_peer(id, HARDCODED_PEERSETS_SYNC);
+		// 					}
+		// 					RequestFailure::Network(OutboundFailure::UnsupportedProtocols) => {
+		// 						self.peerset_handle.report_peer(id.clone(), rep::BAD_PROTOCOL);
+		// 						self.behaviour.disconnect_peer(id, HARDCODED_PEERSETS_SYNC);
+		// 					}
+		// 					RequestFailure::Network(OutboundFailure::DialFailure) => {
+		// 						self.behaviour.disconnect_peer(id, HARDCODED_PEERSETS_SYNC);
+		// 					}
+		// 					RequestFailure::Refused => {
+		// 						self.peerset_handle.report_peer(id.clone(), rep::REFUSED);
+		// 						self.behaviour.disconnect_peer(id, HARDCODED_PEERSETS_SYNC);
+		// 					}
+		// 					RequestFailure::Network(OutboundFailure::ConnectionClosed)
+		// 					| RequestFailure::NotConnected => {
+		// 						self.behaviour.disconnect_peer(id, HARDCODED_PEERSETS_SYNC);
+		// 					},
+		// 					RequestFailure::UnknownProtocol => {
+		// 						debug_assert!(false, "Block request protocol should always be known.");
+		// 					}
+		// 					RequestFailure::Obsolete => {
+		// 						debug_assert!(
+		// 							false,
+		// 							"Can not receive `RequestFailure::Obsolete` after dropping the \
+		// 							 response receiver.",
+		// 						);
+		// 					}
+		// 				}
+		// 			},
+		// 			Poll::Ready(Err(oneshot::Canceled)) => {
+		// 				peer.block_request.take();
+		// 				trace!(
+		// 					target: "sync",
+		// 					"Block request to peer {:?} failed due to oneshot being canceled.",
+		// 					id,
+		// 				);
+		// 				self.behaviour.disconnect_peer(id, HARDCODED_PEERSETS_SYNC);
+		// 			},
+		// 			Poll::Pending => {},
+		// 		}
+		// 	}
+		// }
+		// for (id, req, protobuf_response) in finished_block_requests {
+		// 	let ev = self.on_block_response(id, req, protobuf_response);
+		// 	self.pending_messages.push_back(ev);
+		// }
 
 		while let Poll::Ready(Some(())) = self.tick_timeout.poll_next_unpin(cx) {
 			self.tick();
 		}
 
-		for (id, request) in self.sync.block_requests() {
-			let event = prepare_block_request(&mut self.peers, id.clone(), request);
-			self.pending_messages.push_back(event);
-		}
-		for (id, request) in self.sync.justification_requests() {
-			let event = prepare_block_request(&mut self.peers, id, request);
-			self.pending_messages.push_back(event);
-		}
+		// for (id, request) in self.sync.block_requests() {
+		// 	let event = prepare_block_request(&mut self.peers, id.clone(), request);
+		// 	self.pending_messages.push_back(event);
+		// }
+		// for (id, request) in self.sync.justification_requests() {
+		// 	let event = prepare_block_request(&mut self.peers, id, request);
+		// 	self.pending_messages.push_back(event);
+		// }
 
 		// Check if there is any block announcement validation finished.
-		while let Poll::Ready(result) = self.sync.poll_block_announce_validation(cx) {
-			match self.process_block_announce_validation_result(result) {
-				CustomMessageOutcome::None => {},
-				outcome => self.pending_messages.push_back(outcome),
-			}
-		}
+		// while let Poll::Ready(result) = self.sync.poll_block_announce_validation(cx) {
+		// 	match self.process_block_announce_validation_result(result) {
+		// 		CustomMessageOutcome::None => {},
+		// 		outcome => self.pending_messages.push_back(outcome),
+		// 	}
+		// }
 
 		if let Some(message) = self.pending_messages.pop_front() {
 			return Poll::Ready(NetworkBehaviourAction::GenerateEvent(message));
@@ -1340,55 +1340,55 @@ impl<B: BlockT> NetworkBehaviour for Protocol<B> {
 					// `received_handshake` can be either a `Status` message if received from the
 					// legacy substream ,or a `BlockAnnouncesHandshake` if received from the block
 					// announces substream.
-					match <Message<B> as DecodeAll>::decode_all(&mut &received_handshake[..]) {
-						Ok(GenericMessage::Status(handshake)) => {
-							let handshake = BlockAnnouncesHandshake {
-								roles: handshake.roles,
-								best_number: handshake.best_number,
-								best_hash: handshake.best_hash,
-								genesis_hash: handshake.genesis_hash,
-							};
+					// match <Message<B> as DecodeAll>::decode_all(&mut &received_handshake[..]) {
+					// 	Ok(GenericMessage::Status(handshake)) => {
+					// 		// let handshake = BlockAnnouncesHandshake {
+					// 		// 	roles: handshake.roles,
+					// 		// 	best_number: handshake.best_number,
+					// 		// 	best_hash: handshake.best_hash,
+					// 		// 	genesis_hash: handshake.genesis_hash,
+					// 		// };
 
-							if self.on_sync_peer_connected(peer_id.clone(), handshake).is_ok() {
-								CustomMessageOutcome::SyncConnected(peer_id)
-							} else {
-								CustomMessageOutcome::None
-							}
-						},
-						Ok(msg) => {
-							debug!(
-								target: "sync",
-								"Expected Status message from {}, but got {:?}",
-								peer_id,
-								msg,
-							);
-							self.peerset_handle.report_peer(peer_id, rep::BAD_MESSAGE);
-							CustomMessageOutcome::None
-						}
-						Err(err) => {
-							match <BlockAnnouncesHandshake<B> as DecodeAll>::decode_all(&mut &received_handshake[..]) {
-								Ok(handshake) => {
-									if self.on_sync_peer_connected(peer_id.clone(), handshake).is_ok() {
-										CustomMessageOutcome::SyncConnected(peer_id)
-									} else {
-										CustomMessageOutcome::None
-									}
-								}
-								Err(err2) => {
-									debug!(
-										target: "sync",
-										"Couldn't decode handshake sent by {}: {:?}: {} & {}",
-										peer_id,
-										received_handshake,
-										err,
-										err2,
-									);
-									self.peerset_handle.report_peer(peer_id, rep::BAD_MESSAGE);
-									CustomMessageOutcome::None
-								}
-							}
-						}
-					}
+					// 		if self.on_sync_peer_connected(peer_id.clone(), handshake).is_ok() {
+					// 			CustomMessageOutcome::SyncConnected(peer_id)
+					// 		} else {
+					// 			CustomMessageOutcome::None
+					// 		}
+					// 	},
+					// 	Ok(msg) => {
+					// 		debug!(
+					// 			target: "sync",
+					// 			"Expected Status message from {}, but got {:?}",
+					// 			peer_id,
+					// 			msg,
+					// 		);
+					// 		self.peerset_handle.report_peer(peer_id, rep::BAD_MESSAGE);
+					// 		CustomMessageOutcome::None
+					// 	}
+					// 	Err(err) => {
+							// match <BlockAnnouncesHandshake<B> as DecodeAll>::decode_all(&mut &received_handshake[..]) {
+							// 	Ok(handshake) => {
+							// 		if self.on_sync_peer_connected(peer_id.clone(), handshake).is_ok() {
+							// 			CustomMessageOutcome::SyncConnected(peer_id)
+							// 		} else {
+							// 			CustomMessageOutcome::None
+							// 		}
+							// 	}
+							// 	Err(err2) => {
+							// 		debug!(
+							// 			target: "sync",
+							// 			"Couldn't decode handshake sent by {}: {:?}: {} & {}",
+							// 			peer_id,
+							// 			received_handshake,
+							// 			err,
+							// 			err2,
+							// 		);
+							// 		self.peerset_handle.report_peer(peer_id, rep::BAD_MESSAGE);
+							// 		CustomMessageOutcome::None
+							// 	}
+							// }
+					// 	}
+					// }
 
 				} else {
 					match (message::Roles::decode_all(&received_handshake[..]), self.peers.get(&peer_id)) {
@@ -1437,16 +1437,16 @@ impl<B: BlockT> NetworkBehaviour for Protocol<B> {
 			NotificationsOut::CustomProtocolClosed { peer_id, set_id } => {
 				// Set number 0 is hardcoded the default set of peers we sync from.
 				if set_id == HARDCODED_PEERSETS_SYNC {
-					if self.on_sync_peer_disconnected(peer_id.clone()).is_ok() {
-						CustomMessageOutcome::SyncDisconnected(peer_id)
-					} else {
-						log::trace!(
-							target: "sync",
-							"Disconnected peer which had earlier been refused by on_sync_peer_connected {}",
-							peer_id
-						);
+					// if self.on_sync_peer_disconnected(peer_id.clone()).is_ok() {
+					// 	// CustomMessageOutcome::SyncDisconnected(peer_id)
+					// } else {
+					// 	log::trace!(
+					// 		target: "sync",
+					// 		"Disconnected peer which had earlier been refused by on_sync_peer_connected {}",
+					// 		peer_id
+					// 	);
 						CustomMessageOutcome::None
-					}
+					// }
 				} else if self.bad_handshake_substreams.remove(&(peer_id.clone(), set_id)) {
 					// The substream that has just been closed had been opened with a bad
 					// handshake. The outer layers have never received an opening event about this
@@ -1462,20 +1462,20 @@ impl<B: BlockT> NetworkBehaviour for Protocol<B> {
 			NotificationsOut::Notification { peer_id, set_id, message } =>
 				match set_id {
 					HARDCODED_PEERSETS_SYNC if self.peers.contains_key(&peer_id) => {
-						if let Ok(announce) = message::BlockAnnounce::decode(&mut message.as_ref()) {
-							self.push_block_announce_validation(peer_id, announce);
+						// if let Ok(announce) = message::BlockAnnounce::decode(&mut message.as_ref()) {
+						// 	self.push_block_announce_validation(peer_id, announce);
 
-							// Make sure that the newly added block announce validation future was
-							// polled once to be registered in the task.
-							if let Poll::Ready(res) = self.sync.poll_block_announce_validation(cx) {
-								self.process_block_announce_validation_result(res)
-							} else {
-								CustomMessageOutcome::None
-							}
-						} else {
-							warn!(target: "sub-libp2p", "Failed to decode block announce");
+						// 	// Make sure that the newly added block announce validation future was
+						// 	// polled once to be registered in the task.
+						// 	if let Poll::Ready(res) = self.sync.poll_block_announce_validation(cx) {
+						// 		self.process_block_announce_validation_result(res)
+						// 	} else {
+						// 		CustomMessageOutcome::None
+						// 	}
+						// } else {
+						// 	warn!(target: "sub-libp2p", "Failed to decode block announce");
 							CustomMessageOutcome::None
-						}
+						// }
 					}
 					HARDCODED_PEERSETS_SYNC => {
 						trace!(
@@ -1495,7 +1495,7 @@ impl<B: BlockT> NetworkBehaviour for Protocol<B> {
 				}
 		};
 
-		if !matches!(outcome, CustomMessageOutcome::<B>::None) {
+		if !matches!(outcome, CustomMessageOutcome::None) {
 			return Poll::Ready(NetworkBehaviourAction::GenerateEvent(outcome));
 		}
 

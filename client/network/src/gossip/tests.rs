@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::block_request_handler::BlockRequestHandler;
+// use crate::block_request_handler::BlockRequestHandler;
 use crate::light_client_requests::handler::LightClientRequestHandler;
 use crate::gossip::QueuedSender;
 use crate::{config,  Event, NetworkService, NetworkWorker};
@@ -24,12 +24,12 @@ use crate::{config,  Event, NetworkService, NetworkWorker};
 use futures::prelude::*;
 use sp_runtime::traits::{Block as BlockT, Header as _};
 use std::{borrow::Cow, sync::Arc, time::Duration};
-use substrate_test_runtime_client::{TestClientBuilder, TestClientBuilderExt as _};
+// use substrate_test_runtime_client::{TestClientBuilder, TestClientBuilderExt as _};
 
-type TestNetworkService = NetworkService<
-	substrate_test_runtime_client::runtime::Block,
-	substrate_test_runtime_client::runtime::Hash,
->;
+// type TestNetworkService = NetworkService<
+// 	substrate_test_runtime_client::runtime::Block,
+// 	substrate_test_runtime_client::runtime::Hash,
+// >;
 
 /// Builds a full node to be used for testing. Returns the node service and its associated events
 /// stream.

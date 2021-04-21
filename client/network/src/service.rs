@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Main entry point of the sc-network crate.
+//! Main entry point of the ac-network crate.
 //!
 //! There are two main structs in this module: [`NetworkWorker`] and [`NetworkService`].
 //! The [`NetworkWorker`] *is* the network and implements the `Future` trait. It must be polled in
@@ -37,8 +37,8 @@ use crate::{
 	network_state::{
 		NetworkState, NotConnectedPeer as NetworkStateNotConnectedPeer, Peer as NetworkStatePeer,
 	},
-	on_demand_layer::AlwaysBadChecker,
-	light_client_requests,
+	// on_demand_layer::AlwaysBadChecker,
+	// light_client_requests,
 	protocol::{
 		self,
 		message::generic::Roles,
@@ -48,12 +48,11 @@ use crate::{
 		Protocol,
 		Ready,
 		event::Event,
-		sync::SyncState,
 	},
 	transactions,
 	transport, ReputationChange,
 
-	bitswap::Bitswap,
+	// bitswap::Bitswap,
 };
 
 use codec::Encode as _;
@@ -82,9 +81,9 @@ use libp2p::swarm::{
 use log::{error, info, trace, debug, warn};
 use metrics::{Metrics, MetricSources, Histogram, HistogramVec};
 use parking_lot::Mutex;
-use sc_peerset::PeersetHandle;
-use sp_consensus::import_queue::{BlockImportError, BlockImportResult, ImportQueue, Link};
-use sp_runtime::traits::{Block as BlockT, NumberFor};
+use ac_peerset::PeersetHandle;
+// use sp_consensus::import_queue::{BlockImportError, BlockImportResult, ImportQueue, Link};
+// use sp_runtime::traits::{Block as BlockT, NumberFor};
 use sp_utils::mpsc::{tracing_unbounded, TracingUnboundedReceiver, TracingUnboundedSender};
 use std::{
 	borrow::Cow,
@@ -112,7 +111,7 @@ mod out_events;
 // mod tests;
 
 /// network service. Handles network IO and manages connectivity.
-pub struct NetworkService<B: BlockT + 'static, H: ExHashT> {
+pub struct NetworkService<H: ExHashT> {
 	/// Number of peers we're connected to.
 	num_connected: Arc<AtomicUsize>,
 	/// The local external addresses.
@@ -127,7 +126,7 @@ pub struct NetworkService<B: BlockT + 'static, H: ExHashT> {
 	/// nodes it should be connected to or not.
 	peerset: PeersetHandle,
 	/// Channel that sends messages to the actual worker.
-	to_worker: TracingUnboundedSender<ServiceToWorkerMsg<B, H>>,
+	to_worker: TracingUnboundedSender<ServiceToWorkerMsg>,
 	/// For each peer and protocol combination, an object that allows sending notifications to
 	/// that peer. Updated by the [`NetworkWorker`].
 	peers_notifications_sinks: Arc<Mutex<HashMap<(PeerId, Cow<'static, str>), NotificationsSink>>>,
@@ -139,13 +138,13 @@ pub struct NetworkService<B: BlockT + 'static, H: ExHashT> {
 	_marker: PhantomData<H>,
 }
 
-impl<B: BlockT + 'static, H: ExHashT> NetworkWorker<B, H> {
+impl<H: ExHashT> NetworkWorker<H> {
 	/// Creates the network service.
 	///
 	/// Returns a `NetworkWorker` that implements `Future` and must be regularly polled in order
 	/// for the network processing to advance. From it, you can extract a `NetworkService` using
 	/// `worker.service()`. The `NetworkService` can be shared through the codebase.
-	pub fn new(mut params: Params<B, H>) -> Result<NetworkWorker<B, H>, Error> {
+	pub fn new(mut params: Params) -> Result<NetworkWorker<H>, Error> {
 		// Ensure the listen addresses are consistent with the transport.
 		ensure_addresses_consistent_with_transport(
 			params.network_config.listen_addresses.iter(),
@@ -197,12 +196,12 @@ impl<B: BlockT + 'static, H: ExHashT> NetworkWorker<B, H> {
 				roles: From::from(&params.role),
 				max_parallel_downloads: params.network_config.max_parallel_downloads,
 			},
-			params.chain.clone(),
+			// params.chain.clone(),
 			params.protocol_id.clone(),
 			&params.network_config,
 			iter::once(Vec::new()).chain((0..params.network_config.extra_sets.len() - 1)
 				.map(|_| default_notif_handshake_message.clone())).collect(),
-			params.block_announce_validator,
+			// params.block_announce_validator,
 			params.metrics_registry.as_ref(),
 		)?;
 
@@ -236,29 +235,29 @@ impl<B: BlockT + 'static, H: ExHashT> NetworkWorker<B, H> {
 				}
 			)?;
 
-		let checker = params.on_demand.as_ref()
-			.map(|od| od.checker().clone())
-			.unwrap_or_else(|| Arc::new(AlwaysBadChecker));
+		// let checker = params.on_demand.as_ref()
+		// 	.map(|od| od.checker().clone())
+		// 	.unwrap_or_else(|| Arc::new(AlwaysBadChecker));
 
 		let num_connected = Arc::new(AtomicUsize::new(0));
 		// let is_major_syncing = Arc::new(AtomicBool::new(false));
 
 		// Build the swarm.
-		let client = params.chain.clone();
-		let (mut swarm, bandwidth): (Swarm<B>, _) = {
+		// let client = params.chain.clone();
+		let (mut swarm, bandwidth): (Swarm, _) = {
 			let user_agent = format!(
 				"{} ({})",
 				params.network_config.client_version,
 				params.network_config.node_name
 			);
 
-			let light_client_request_sender = {
-				light_client_requests::sender::LightClientRequestSender::new(
-					&params.protocol_id,
-					checker,
-					peerset_handle.clone(),
-				)
-			};
+			// let light_client_request_sender = {
+			// 	light_client_requests::sender::LightClientRequestSender::new(
+			// 		&params.protocol_id,
+			// 		checker,
+			// 		peerset_handle.clone(),
+			// 	)
+			// };
 
 			let discovery_config = {
 				let mut config = DiscoveryConfig::new(local_public.clone());
@@ -331,15 +330,15 @@ impl<B: BlockT + 'static, H: ExHashT> NetworkWorker<B, H> {
 			};
 
 			let behaviour = {
-				let bitswap = if params.network_config.ipfs_server { Some(Bitswap::new(client)) } else { None };
+				// let bitswap = if params.network_config.ipfs_server { Some(Bitswap::new(client)) } else { None };
 				let result = Behaviour::new(
 					protocol,
 					user_agent,
 					local_public,
-					light_client_request_sender,
+					// light_client_request_sender,
 					discovery_config,
 					params.block_request_protocol_config,
-					bitswap,
+					// bitswap,
 					params.light_client_request_protocol_config,
 					params.network_config.request_response_protocols,
 				);
@@ -388,14 +387,14 @@ impl<B: BlockT + 'static, H: ExHashT> NetworkWorker<B, H> {
 
 		// Listen on multiaddresses.
 		for addr in &params.network_config.listen_addresses {
-			if let Err(err) = Swarm::<B>::listen_on(&mut swarm, addr.clone()) {
+			if let Err(err) = Swarm::listen_on(&mut swarm, addr.clone()) {
 				warn!(target: "sub-libp2p", "Can't listen on {} because: {:?}", addr, err)
 			}
 		}
 
 		// Add external addresses.
 		for addr in &params.network_config.public_addresses {
-			Swarm::<B>::add_external_address(&mut swarm, addr.clone(), AddressScore::Infinite);
+			Swarm::add_external_address(&mut swarm, addr.clone(), AddressScore::Infinite);
 		}
 
 		let external_addresses = Arc::new(Mutex::new(Vec::new()));
@@ -415,13 +414,13 @@ impl<B: BlockT + 'static, H: ExHashT> NetworkWorker<B, H> {
 			_marker: PhantomData,
 		});
 
-		let (tx_handler, tx_handler_controller) = transactions_handler_proto.build(
-			service.clone(),
-			params.role,
-			params.transaction_pool,
-			params.metrics_registry.as_ref()
-		)?;
-		(params.transactions_handler_executor)(tx_handler.run().boxed());
+		// let (tx_handler, tx_handler_controller) = transactions_handler_proto.build(
+		// 	service.clone(),
+		// 	params.role,
+		// 	params.transaction_pool,
+		// 	params.metrics_registry.as_ref()
+		// )?;
+		// (params.transactions_handler_executor)(tx_handler.run().boxed());
 
 		Ok(NetworkWorker {
 			external_addresses,
@@ -429,12 +428,12 @@ impl<B: BlockT + 'static, H: ExHashT> NetworkWorker<B, H> {
 			// is_major_syncing,
 			network_service: swarm,
 			service,
-			import_queue: params.import_queue,
+			// import_queue: params.import_queue,
 			from_service,
-			light_client_rqs: params.on_demand.and_then(|od| od.extract_receiver()),
+			// light_client_rqs: params.on_demand.and_then(|od| od.extract_receiver()),
 			event_streams: out_events::OutChannels::new(params.metrics_registry.as_ref())?,
 			peers_notifications_sinks,
-			tx_handler_controller,
+			// tx_handler_controller,
 			metrics,
 			boot_node_ids,
 		})
@@ -510,30 +509,30 @@ impl<B: BlockT + 'static, H: ExHashT> NetworkWorker<B, H> {
 
 	/// Return a `NetworkService` that can be shared through the code base and can be used to
 	/// manipulate the worker.
-	pub fn service(&self) -> &Arc<NetworkService<B, H>> {
+	pub fn service(&self) -> &Arc<NetworkService<H>> {
 		&self.service
 	}
 
-	/// You must call this when a new block is finalized by the client.
-	pub fn on_block_finalized(&mut self, hash: B::Hash, header: B::Header) {
-		self.network_service.user_protocol_mut().on_block_finalized(hash, &header);
-	}
+	// / You must call this when a new block is finalized by the client.
+	// pub fn on_block_finalized(&mut self, hash: B::Hash, header: B::Header) {
+	// 	self.network_service.user_protocol_mut().on_block_finalized(hash, &header);
+	// }
 
-	/// Inform the network service about new best imported block.
-	pub fn new_best_block_imported(&mut self, hash: B::Hash, number: NumberFor<B>) {
-		self.network_service.user_protocol_mut().new_best_block_imported(hash, number);
-	}
+	// / Inform the network service about new best imported block.
+	// pub fn new_best_block_imported(&mut self, hash: B::Hash, number: NumberFor<B>) {
+	// 	self.network_service.user_protocol_mut().new_best_block_imported(hash, number);
+	// }
 
 	/// Returns the local `PeerId`.
 	pub fn local_peer_id(&self) -> &PeerId {
-		Swarm::<B>::local_peer_id(&self.network_service)
+		Swarm::local_peer_id(&self.network_service)
 	}
 
 	/// Returns the list of addresses we are listening on.
 	///
 	/// Does **NOT** include a trailing `/p2p/` with our `PeerId`.
 	pub fn listen_addresses(&self) -> impl Iterator<Item = &Multiaddr> {
-		Swarm::<B>::listeners(&self.network_service)
+		Swarm::listeners(&self.network_service)
 	}
 
 	/// Get network state.
@@ -584,9 +583,9 @@ impl<B: BlockT + 'static, H: ExHashT> NetworkWorker<B, H> {
 				.collect()
 		};
 
-		let peer_id = Swarm::<B>::local_peer_id(&swarm).to_base58();
-		let listened_addresses = Swarm::<B>::listeners(&swarm).cloned().collect();
-		let external_addresses = Swarm::<B>::external_addresses(&swarm)
+		let peer_id = Swarm::local_peer_id(&swarm).to_base58();
+		let listened_addresses = Swarm::listeners(&swarm).cloned().collect();
+		let external_addresses = Swarm::external_addresses(&swarm)
 			.map(|r| &r.addr)
 			.cloned()
 			.collect();
@@ -602,7 +601,7 @@ impl<B: BlockT + 'static, H: ExHashT> NetworkWorker<B, H> {
 	}
 
 	/// Get currently connected peers.
-	pub fn peers_debug_info(&mut self) -> Vec<(PeerId, PeerInfo<B>)> {
+	pub fn peers_debug_info(&mut self) -> Vec<(PeerId, PeerInfo)> {
 		self.network_service.user_protocol_mut()
 			.peers_info()
 			.map(|(id, info)| (id.clone(), info.clone()))
@@ -621,7 +620,7 @@ impl<B: BlockT + 'static, H: ExHashT> NetworkWorker<B, H> {
 	}
 }
 
-impl<B: BlockT + 'static, H: ExHashT> NetworkService<B, H> {
+impl<H: ExHashT> NetworkService<H> {
 	/// Returns the local `PeerId`.
 	pub fn local_peer_id(&self) -> &PeerId {
 		&self.local_peer_id
@@ -899,13 +898,13 @@ impl<B: BlockT + 'static, H: ExHashT> NetworkService<B, H> {
 		let _ = self.to_worker.unbounded_send(ServiceToWorkerMsg::PropagateTransaction(hash));
 	}
 
-	/// Make sure an important block is propagated to peers.
-	///
-	/// In chain-based consensus, we often need to make sure non-best forks are
-	/// at least temporarily synced. This function forces such an announcement.
-	pub fn announce_block(&self, hash: B::Hash, data: Option<Vec<u8>>) {
-		let _ = self.to_worker.unbounded_send(ServiceToWorkerMsg::AnnounceBlock(hash, data));
-	}
+	// / Make sure an important block is propagated to peers.
+	// /
+	// / In chain-based consensus, we often need to make sure non-best forks are
+	// / at least temporarily synced. This function forces such an announcement.
+	// pub fn announce_block(&self, hash: B::Hash, data: Option<Vec<u8>>) {
+	// 	let _ = self.to_worker.unbounded_send(ServiceToWorkerMsg::AnnounceBlock(hash, data));
+	// }
 
 	/// Report a given peer as either beneficial (+) or costly (-) according to the
 	/// given scalar.
@@ -924,15 +923,15 @@ impl<B: BlockT + 'static, H: ExHashT> NetworkService<B, H> {
 		let _ = self.to_worker.unbounded_send(ServiceToWorkerMsg::DisconnectPeer(who, protocol.into()));
 	}
 
-	/// Request a justification for the given block from the network.
-	///
-	/// On success, the justification will be passed to the import queue that was part at
-	/// initialization as part of the configuration.
-	pub fn request_justification(&self, hash: &B::Hash, number: NumberFor<B>) {
-		let _ = self
-			.to_worker
-			.unbounded_send(ServiceToWorkerMsg::RequestJustification(*hash, number));
-	}
+	// / Request a justification for the given block from the network.
+	// /
+	// / On success, the justification will be passed to the import queue that was part at
+	// / initialization as part of the configuration.
+	// pub fn request_justification(&self, hash: &B::Hash, number: NumberFor<B>) {
+	// 	let _ = self
+	// 		.to_worker
+	// 		.unbounded_send(ServiceToWorkerMsg::RequestJustification(*hash, number));
+	// }
 
 	// Are we in the process of downloading the chain?
 	// pub fn is_major_syncing(&self) -> bool {
@@ -1053,17 +1052,17 @@ impl<B: BlockT + 'static, H: ExHashT> NetworkService<B, H> {
 		Ok(())
 	}
 
-	/// Configure an explicit fork sync request.
-	/// Note that this function should not be used for recent blocks.
-	/// Sync should be able to download all the recent forks normally.
-	/// `set_sync_fork_request` should only be used if external code detects that there's
-	/// a stale fork missing.
-	/// Passing empty `peers` set effectively removes the sync request.
-	pub fn set_sync_fork_request(&self, peers: Vec<PeerId>, hash: B::Hash, number: NumberFor<B>) {
-		let _ = self
-			.to_worker
-			.unbounded_send(ServiceToWorkerMsg::SyncFork(peers, hash, number));
-	}
+	// / Configure an explicit fork sync request.
+	// / Note that this function should not be used for recent blocks.
+	// / Sync should be able to download all the recent forks normally.
+	// / `set_sync_fork_request` should only be used if external code detects that there's
+	// / a stale fork missing.
+	// / Passing empty `peers` set effectively removes the sync request.
+	// pub fn set_sync_fork_request(&self, peers: Vec<PeerId>, hash: B::Hash, number: NumberFor<B>) {
+	// 	let _ = self
+	// 		.to_worker
+	// 		.unbounded_send(ServiceToWorkerMsg::SyncFork(peers, hash, number));
+	// }
 
 	/// Add a peer to a set of peers.
 	///
@@ -1121,12 +1120,12 @@ impl<B: BlockT + 'static, H: ExHashT> NetworkService<B, H> {
 		self.num_connected.load(Ordering::Relaxed)
 	}
 
-	/// Inform the network service about new best imported block.
-	pub fn new_best_block_imported(&self, hash: B::Hash, number: NumberFor<B>) {
-		let _ = self
-			.to_worker
-			.unbounded_send(ServiceToWorkerMsg::NewBestBlockImported(hash, number));
-	}
+	// / Inform the network service about new best imported block.
+	// pub fn new_best_block_imported(&self, hash: B::Hash, number: NumberFor<B>) {
+	// 	let _ = self
+	// 		.to_worker
+	// 		.unbounded_send(ServiceToWorkerMsg::NewBestBlockImported(hash, number));
+	// }
 
 	/// Utility function to extract `PeerId` from each `Multiaddr` for peer set updates.
 	///
@@ -1177,9 +1176,8 @@ impl<B: BlockT + 'static, H: ExHashT> NetworkService<B, H> {
 // 	}
 // }
 
-impl<B, H> NetworkStateInfo for NetworkService<B, H>
+impl<H> NetworkStateInfo for NetworkService<H>
 	where
-		B: sp_runtime::traits::Block,
 		H: ExHashT,
 {
 	/// Returns the local external addresses.
@@ -1277,11 +1275,11 @@ pub enum NotificationSenderError {
 /// Messages sent from the `NetworkService` to the `NetworkWorker`.
 ///
 /// Each entry corresponds to a method of `NetworkService`.
-enum ServiceToWorkerMsg<B: BlockT, H: ExHashT> {
-	PropagateTransaction(H),
-	PropagateTransactions,
-	RequestJustification(B::Hash, NumberFor<B>),
-	AnnounceBlock(B::Hash, Option<Vec<u8>>),
+enum ServiceToWorkerMsg {
+	// PropagateTransaction(H),
+	// PropagateTransactions,
+	// RequestJustification(B::Hash, NumberFor<B>),
+	// AnnounceBlock(B::Hash, Option<Vec<u8>>),
 	GetValue(record::Key),
 	PutValue(record::Key, Vec<u8>),
 	AddKnownAddress(PeerId, Multiaddr),
@@ -1293,7 +1291,7 @@ enum ServiceToWorkerMsg<B: BlockT, H: ExHashT> {
 	RemoveSetReserved(Cow<'static, str>, PeerId),
 	AddToPeersSet(Cow<'static, str>, PeerId),
 	RemoveFromPeersSet(Cow<'static, str>, PeerId),
-	SyncFork(Vec<PeerId>, B::Hash, NumberFor<B>),
+	// SyncFork(Vec<PeerId>, B::Hash, NumberFor<B>),
 	EventStream(out_events::Sender),
 	Request {
 		target: PeerId,
@@ -1303,14 +1301,14 @@ enum ServiceToWorkerMsg<B: BlockT, H: ExHashT> {
 		connect: IfDisconnected,
 	},
 	DisconnectPeer(PeerId, Cow<'static, str>),
-	NewBestBlockImported(B::Hash, NumberFor<B>),
+	// NewBestBlockImported(B::Hash, NumberFor<B>),
 }
 
 /// Main network worker. Must be polled in order for the network to advance.
 ///
 /// You are encouraged to poll this in a separate background thread or task.
 #[must_use = "The NetworkWorker must be polled in order for the network to advance"]
-pub struct NetworkWorker<B: BlockT + 'static, H: ExHashT> {
+pub struct NetworkWorker<H: ExHashT> {
 	/// Updated by the `NetworkWorker` and loaded by the `NetworkService`.
 	external_addresses: Arc<Mutex<Vec<Multiaddr>>>,
 	/// Updated by the `NetworkWorker` and loaded by the `NetworkService`.
@@ -1318,15 +1316,15 @@ pub struct NetworkWorker<B: BlockT + 'static, H: ExHashT> {
 	/// Updated by the `NetworkWorker` and loaded by the `NetworkService`.
 	// is_major_syncing: Arc<AtomicBool>,
 	/// The network service that can be extracted and shared through the codebase.
-	service: Arc<NetworkService<B, H>>,
+	service: Arc<NetworkService<H>>,
 	/// The *actual* network.
-	network_service: Swarm<B>,
-	/// The import queue that was passed at initialization.
-	import_queue: Box<dyn ImportQueue<B>>,
+	network_service: Swarm,
+	//// The import queue that was passed at initialization.
+	// import_queue: Box<dyn ImportQueue<B>>,
 	/// Messages from the [`NetworkService`] that must be processed.
-	from_service: TracingUnboundedReceiver<ServiceToWorkerMsg<B, H>>,
-	/// Receiver for queries from the light client that must be processed.
-	light_client_rqs: Option<TracingUnboundedReceiver<light_client_requests::sender::Request<B>>>,
+	from_service: TracingUnboundedReceiver<ServiceToWorkerMsg>,
+	// / Receiver for queries from the light client that must be processed.
+	// light_client_rqs: Option<TracingUnboundedReceiver<light_client_requests::sender::Request>>,
 	/// Senders for events that happen on the network.
 	event_streams: out_events::OutChannels,
 	/// Prometheus network metrics.
@@ -1336,37 +1334,37 @@ pub struct NetworkWorker<B: BlockT + 'static, H: ExHashT> {
 	/// For each peer and protocol combination, an object that allows sending notifications to
 	/// that peer. Shared with the [`NetworkService`].
 	peers_notifications_sinks: Arc<Mutex<HashMap<(PeerId, Cow<'static, str>), NotificationsSink>>>,
-	/// Controller for the handler of incoming and outgoing transactions.
-	tx_handler_controller: transactions::TransactionsHandlerController<H>,
+	// / Controller for the handler of incoming and outgoing transactions.
+	// tx_handler_controller: transactions::TransactionsHandlerController<H>,
 }
 
-impl<B: BlockT + 'static, H: ExHashT> Future for NetworkWorker<B, H> {
+impl<H: ExHashT> Future for NetworkWorker<H> {
 	type Output = ();
 
 	fn poll(mut self: Pin<&mut Self>, cx: &mut std::task::Context) -> Poll<Self::Output> {
 		let this = &mut *self;
 
 		// Poll the import queue for actions to perform.
-		this.import_queue.poll_actions(cx, &mut NetworkLink {
-			protocol: &mut this.network_service,
-		});
+		// this.import_queue.poll_actions(cx, &mut NetworkLink {
+		// 	protocol: &mut this.network_service,
+		// });
 
 		// Check for new incoming light client requests.
-		if let Some(light_client_rqs) = this.light_client_rqs.as_mut() {
-			while let Poll::Ready(Some(rq)) = light_client_rqs.poll_next_unpin(cx) {
-				let result = this.network_service.light_client_request(rq);
-				match result {
-					Ok(()) => {},
-					Err(light_client_requests::sender::SendRequestError::TooManyRequests) => {
-						log::warn!("Couldn't start light client request: too many pending requests");
-					}
-				}
+		// if let Some(light_client_rqs) = this.light_client_rqs.as_mut() {
+		// 	while let Poll::Ready(Some(rq)) = light_client_rqs.poll_next_unpin(cx) {
+		// 		let result = this.network_service.light_client_request(rq);
+		// 		match result {
+		// 			Ok(()) => {},
+		// 			Err(light_client_requests::sender::SendRequestError::TooManyRequests) => {
+		// 				log::warn!("Couldn't start light client request: too many pending requests");
+		// 			}
+		// 		}
 
-				if let Some(metrics) = this.metrics.as_ref() {
-					metrics.issued_light_requests.inc();
-				}
-			}
-		}
+		// 		if let Some(metrics) = this.metrics.as_ref() {
+		// 			metrics.issued_light_requests.inc();
+		// 		}
+		// 	}
+		// }
 
 		// At the time of writing of this comment, due to a high volume of messages, the network
 		// worker sometimes takes a long time to process the loop below. When that happens, the
@@ -1392,14 +1390,14 @@ impl<B: BlockT + 'static, H: ExHashT> Future for NetworkWorker<B, H> {
 			};
 
 			match msg {
-				ServiceToWorkerMsg::AnnounceBlock(hash, data) =>
-					this.network_service.user_protocol_mut().announce_block(hash, data),
-				ServiceToWorkerMsg::RequestJustification(hash, number) =>
-					this.network_service.user_protocol_mut().request_justification(&hash, number),
-				ServiceToWorkerMsg::PropagateTransaction(hash) =>
-					this.tx_handler_controller.propagate_transaction(hash),
-				ServiceToWorkerMsg::PropagateTransactions =>
-					this.tx_handler_controller.propagate_transactions(),
+				// ServiceToWorkerMsg::AnnounceBlock(hash, data) =>
+				// 	this.network_service.user_protocol_mut().announce_block(hash, data),
+				// ServiceToWorkerMsg::RequestJustification(hash, number) =>
+				// 	this.network_service.user_protocol_mut().request_justification(&hash, number),
+				// ServiceToWorkerMsg::PropagateTransaction(hash) =>
+				// 	this.tx_handler_controller.propagate_transaction(hash),
+				// ServiceToWorkerMsg::PropagateTransactions =>
+				// 	this.tx_handler_controller.propagate_transactions(),
 				ServiceToWorkerMsg::GetValue(key) =>
 					this.network_service.get_value(&key),
 				ServiceToWorkerMsg::PutValue(key, value) =>
@@ -1422,8 +1420,8 @@ impl<B: BlockT + 'static, H: ExHashT> Future for NetworkWorker<B, H> {
 					this.network_service.user_protocol_mut().add_to_peers_set(protocol, peer_id),
 				ServiceToWorkerMsg::RemoveFromPeersSet(protocol, peer_id) =>
 					this.network_service.user_protocol_mut().remove_from_peers_set(protocol, peer_id),
-				ServiceToWorkerMsg::SyncFork(peer_ids, hash, number) =>
-					this.network_service.user_protocol_mut().set_sync_fork_request(peer_ids, &hash, number),
+				// ServiceToWorkerMsg::SyncFork(peer_ids, hash, number) =>
+				// 	this.network_service.user_protocol_mut().set_sync_fork_request(peer_ids, &hash, number),
 				ServiceToWorkerMsg::EventStream(sender) =>
 					this.event_streams.push(sender),
 				ServiceToWorkerMsg::Request { target, protocol, request, pending_response, connect } => {
@@ -1431,8 +1429,8 @@ impl<B: BlockT + 'static, H: ExHashT> Future for NetworkWorker<B, H> {
 				},
 				ServiceToWorkerMsg::DisconnectPeer(who, protocol_name) =>
 					this.network_service.user_protocol_mut().disconnect_peer(&who, &protocol_name),
-				ServiceToWorkerMsg::NewBestBlockImported(hash, number) =>
-					this.network_service.user_protocol_mut().new_best_block_imported(hash, number),
+				// ServiceToWorkerMsg::NewBestBlockImported(hash, number) =>
+				// 	this.network_service.user_protocol_mut().new_best_block_imported(hash, number),
 			}
 		}
 
@@ -1782,7 +1780,7 @@ impl<B: BlockT + 'static, H: ExHashT> Future for NetworkWorker<B, H> {
 		// Update the variables shared with the `NetworkService`.
 		this.num_connected.store(num_connected_peers, Ordering::Relaxed);
 		{
-			let external_addresses = Swarm::<B>::external_addresses(&this.network_service)
+			let external_addresses = Swarm::external_addresses(&this.network_service)
 				.map(|r| &r.addr)
 				.cloned()
 				.collect();
@@ -1823,33 +1821,33 @@ impl<B: BlockT + 'static, H: ExHashT> Future for NetworkWorker<B, H> {
 	}
 }
 
-impl<B: BlockT + 'static, H: ExHashT> Unpin for NetworkWorker<B, H> {
+impl<H: ExHashT> Unpin for NetworkWorker<H> {
 }
 
 /// The libp2p swarm, customized for our needs.
-type Swarm<B> = libp2p::swarm::Swarm<Behaviour<B>>;
+type Swarm = libp2p::swarm::Swarm<Behaviour>;
 
 // Implementation of `import_queue::Link` trait using the available local variables.
-struct NetworkLink<'a, B: BlockT> {
-	protocol: &'a mut Swarm<B>,
+struct NetworkLink<'a> {
+	protocol: &'a mut Swarm,
 }
 
-impl<'a, B: BlockT> Link<B> for NetworkLink<'a, B> {
-	fn blocks_processed(
-		&mut self,
-		imported: usize,
-		count: usize,
-		results: Vec<(Result<BlockImportResult<NumberFor<B>>, BlockImportError>, B::Hash)>
-	) {
-		self.protocol.user_protocol_mut().on_blocks_processed(imported, count, results)
-	}
-	fn justification_imported(&mut self, who: PeerId, hash: &B::Hash, number: NumberFor<B>, success: bool) {
-		self.protocol.user_protocol_mut().justification_import_result(who, hash.clone(), number, success);
-	}
-	fn request_justification(&mut self, hash: &B::Hash, number: NumberFor<B>) {
-		self.protocol.user_protocol_mut().request_justification(hash, number)
-	}
-}
+// impl<'a, B: BlockT> Link<B> for NetworkLink<'a, B> {
+// 	fn blocks_processed(
+// 		&mut self,
+// 		imported: usize,
+// 		count: usize,
+// 		results: Vec<(Result<BlockImportResult<NumberFor<B>>, BlockImportError>, B::Hash)>
+// 	) {
+// 		self.protocol.user_protocol_mut().on_blocks_processed(imported, count, results)
+// 	}
+// 	fn justification_imported(&mut self, who: PeerId, hash: &B::Hash, number: NumberFor<B>, success: bool) {
+// 		self.protocol.user_protocol_mut().justification_import_result(who, hash.clone(), number, success);
+// 	}
+// 	fn request_justification(&mut self, hash: &B::Hash, number: NumberFor<B>) {
+// 		self.protocol.user_protocol_mut().request_justification(hash, number)
+// 	}
+// }
 
 fn ensure_addresses_consistent_with_transport<'a>(
 	addresses: impl Iterator<Item = &'a Multiaddr>,

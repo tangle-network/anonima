@@ -18,7 +18,7 @@
 
 //! On-demand requests service.
 
-use crate::light_client_requests;
+// use crate::light_client_requests;
 
 use futures::{channel::oneshot, prelude::*};
 use parking_lot::Mutex;
@@ -27,7 +27,7 @@ use sc_client_api::{
 	RemoteHeaderRequest, RemoteReadChildRequest, RemoteReadRequest, StorageProof, ChangesProof,
 };
 use sp_utils::mpsc::{tracing_unbounded, TracingUnboundedReceiver, TracingUnboundedSender};
-use sp_blockchain::Error as ClientError;
+// use sp_blockchain::Error as ClientError;
 use sp_runtime::traits::{Block as BlockT, Header as HeaderT, NumberFor};
 use std::{collections::HashMap, pin::Pin, sync::Arc, task::Context, task::Poll};
 

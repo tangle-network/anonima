@@ -61,8 +61,8 @@ use std::{
 	sync::Arc,
 };
 
-#[cfg(test)]
-mod tests;
+// #[cfg(test)]
+// mod tests;
 
 /// Notifications sender for a specific combination of network service, peer, and protocol.
 pub struct QueuedSender<M> {
@@ -80,8 +80,8 @@ impl<M> QueuedSender<M> {
 	///
 	/// In addition to the [`QueuedSender`], also returns a `Future` whose role is to drive
 	/// the messages sending forward.
-	pub fn new<B, H, F>(
-		service: Arc<NetworkService<B, H>>,
+	pub fn new<H, F>(
+		service: Arc<NetworkService<H>>,
 		peer_id: PeerId,
 		protocol: Cow<'static, str>,
 		queue_size_limit: usize,
@@ -89,7 +89,6 @@ impl<M> QueuedSender<M> {
 	) -> (Self, impl Future<Output = ()> + Send + 'static)
 	where
 		M: Send + 'static,
-		B: BlockT + 'static,
 		H: ExHashT,
 		F: Fn(M) -> Vec<u8> + Send + 'static,
 	{
@@ -190,9 +189,9 @@ type MessageQueue<M> = VecDeque<M>;
 /// [`MessageQueue`] shared between [`QueuedSender`] and background future.
 type SharedMessageQueue<M> = Arc<Mutex<MessageQueue<M>>>;
 
-async fn create_background_future<B: BlockT, H: ExHashT, M, F: Fn(M) -> Vec<u8>>(
+async fn create_background_future<H: ExHashT, M, F: Fn(M) -> Vec<u8>>(
 	mut wait_for_sender: Receiver<()>,
-	service: Arc<NetworkService<B, H>>,
+	service: Arc<NetworkService<H>>,
 	peer_id: PeerId,
 	protocol: Cow<'static, str>,
 	shared_message_queue: SharedMessageQueue<M>,

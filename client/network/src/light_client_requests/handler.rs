@@ -23,7 +23,7 @@
 
 use codec::{self, Encode, Decode};
 use crate::{
-	chain::Client,
+	// chain::Client,
 	config::ProtocolId,
 	schema,
 	PeerId,
@@ -36,7 +36,7 @@ use sc_client_api::{
 	light
 };
 use sc_peerset::ReputationChange;
-use sp_core::{
+use ap_core::{
 	storage::{ChildInfo, ChildType,StorageKey, PrefixedStorageKey},
 	hexdisplay::HexDisplay,
 };
@@ -53,17 +53,17 @@ use log::{trace, debug};
 const LOG_TARGET: &str = "light-client-request-handler";
 
 /// Handler for incoming light client requests from a remote peer.
-pub struct LightClientRequestHandler<B: Block> {
+pub struct LightClientRequestHandler {
 	request_receiver: mpsc::Receiver<IncomingRequest>,
-	/// Blockchain client.
-	client: Arc<dyn Client<B>>,
+	// / Blockchain client.
+	// client: Arc<dyn Client<B>>,
 }
 
-impl<B: Block> LightClientRequestHandler<B> {
+impl LightClientRequestHandler {
 	/// Create a new [`crate::block_request_handler::BlockRequestHandler`].
 	pub fn new(
 		protocol_id: &ProtocolId,
-		client: Arc<dyn Client<B>>,
+		// client: Arc<dyn Client<B>>,
 	) -> (Self, ProtocolConfig) {
 		// For now due to lack of data on light client request handling in production systems, this
 		// value is chosen to match the block request limit.
@@ -72,7 +72,7 @@ impl<B: Block> LightClientRequestHandler<B> {
 		let mut protocol_config = super::generate_protocol_config(protocol_id);
 		protocol_config.inbound_queue = Some(tx);
 
-		(Self { client, request_receiver }, protocol_config)
+		(Self { request_receiver }, protocol_config)
 	}
 
 	/// Run [`LightClientRequestHandler`].
@@ -151,7 +151,8 @@ impl<B: Block> LightClientRequestHandler<B> {
 			Some(schema::v1::light::request::Request::RemoteReadChildRequest(r)) =>
 				self.on_remote_read_child_request(&peer, r)?,
 			Some(schema::v1::light::request::Request::RemoteChangesRequest(r)) =>
-				self.on_remote_changes_request(&peer, r)?,
+				unimplemented!(),
+			// self.on_remote_changes_request(&peer, r)?,
 			None => {
 				return Err(HandleRequestError::BadRequest("Remote request without request data."));
 			}
@@ -315,69 +316,69 @@ impl<B: Block> LightClientRequestHandler<B> {
 		Ok(schema::v1::light::Response { response: Some(response) })
 	}
 
-	fn on_remote_changes_request(
-		&mut self,
-		peer: &PeerId,
-		request: &schema::v1::light::RemoteChangesRequest,
-	) -> Result<schema::v1::light::Response, HandleRequestError> {
-		log::trace!(
-			"Remote changes proof request from {} for key {} ({:?}..{:?}).",
-			peer,
-			if !request.storage_key.is_empty() {
-				format!("{} : {}", HexDisplay::from(&request.storage_key), HexDisplay::from(&request.key))
-			} else {
-				HexDisplay::from(&request.key).to_string()
-			},
-			request.first,
-			request.last,
-		);
+	// fn on_remote_changes_request(
+	// 	&mut self,
+	// 	peer: &PeerId,
+	// 	request: &schema::v1::light::RemoteChangesRequest,
+	// ) -> Result<schema::v1::light::Response, HandleRequestError> {
+	// 	log::trace!(
+	// 		"Remote changes proof request from {} for key {} ({:?}..{:?}).",
+	// 		peer,
+	// 		if !request.storage_key.is_empty() {
+	// 			format!("{} : {}", HexDisplay::from(&request.storage_key), HexDisplay::from(&request.key))
+	// 		} else {
+	// 			HexDisplay::from(&request.key).to_string()
+	// 		},
+	// 		request.first,
+	// 		request.last,
+	// 	);
 
-		let first = Decode::decode(&mut request.first.as_ref())?;
-		let last = Decode::decode(&mut request.last.as_ref())?;
-		let min = Decode::decode(&mut request.min.as_ref())?;
-		let max = Decode::decode(&mut request.max.as_ref())?;
-		let key = StorageKey(request.key.clone());
-		let storage_key = if request.storage_key.is_empty() {
-			None
-		} else {
-			Some(PrefixedStorageKey::new_ref(&request.storage_key))
-		};
+	// 	let first = Decode::decode(&mut request.first.as_ref())?;
+	// 	let last = Decode::decode(&mut request.last.as_ref())?;
+	// 	let min = Decode::decode(&mut request.min.as_ref())?;
+	// 	let max = Decode::decode(&mut request.max.as_ref())?;
+	// 	let key = StorageKey(request.key.clone());
+	// 	let storage_key = if request.storage_key.is_empty() {
+	// 		None
+	// 	} else {
+	// 		Some(PrefixedStorageKey::new_ref(&request.storage_key))
+	// 	};
 
-		let proof = match self.client.key_changes_proof(first, last, min, max, storage_key, &key) {
-			Ok(proof) => proof,
-			Err(error) => {
-				log::trace!(
-					"Remote changes proof request from {} for key {} ({:?}..{:?}) failed with: {}.",
-					peer,
-					format!("{} : {}", HexDisplay::from(&request.storage_key), HexDisplay::from(&key.0)),
-					request.first,
-					request.last,
-					error,
-				);
+	// 	let proof = match self.client.key_changes_proof(first, last, min, max, storage_key, &key) {
+	// 		Ok(proof) => proof,
+	// 		Err(error) => {
+	// 			log::trace!(
+	// 				"Remote changes proof request from {} for key {} ({:?}..{:?}) failed with: {}.",
+	// 				peer,
+	// 				format!("{} : {}", HexDisplay::from(&request.storage_key), HexDisplay::from(&key.0)),
+	// 				request.first,
+	// 				request.last,
+	// 				error,
+	// 			);
 
-				light::ChangesProof::<B::Header> {
-					max_block: Zero::zero(),
-					proof: Vec::new(),
-					roots: BTreeMap::new(),
-					roots_proof: StorageProof::empty(),
-				}
-			}
-		};
+	// 			light::ChangesProof::<B::Header> {
+	// 				max_block: Zero::zero(),
+	// 				proof: Vec::new(),
+	// 				roots: BTreeMap::new(),
+	// 				roots_proof: StorageProof::empty(),
+	// 			}
+	// 		}
+	// 	};
 
-		let response = {
-			let r = schema::v1::light::RemoteChangesResponse {
-				max: proof.max_block.encode(),
-				proof: proof.proof,
-				roots: proof.roots.into_iter()
-					.map(|(k, v)| schema::v1::light::Pair { fst: k.encode(), snd: v.encode() })
-					.collect(),
-				roots_proof: proof.roots_proof.encode(),
-			};
-			schema::v1::light::response::Response::RemoteChangesResponse(r)
-		};
+	// 	let response = {
+	// 		let r = schema::v1::light::RemoteChangesResponse {
+	// 			max: proof.max_block.encode(),
+	// 			proof: proof.proof,
+	// 			roots: proof.roots.into_iter()
+	// 				.map(|(k, v)| schema::v1::light::Pair { fst: k.encode(), snd: v.encode() })
+	// 				.collect(),
+	// 			roots_proof: proof.roots_proof.encode(),
+	// 		};
+	// 		schema::v1::light::response::Response::RemoteChangesResponse(r)
+	// 	};
 
-		Ok(schema::v1::light::Response { response: Some(response) })
-	}
+	// 	Ok(schema::v1::light::Response { response: Some(response) })
+	// }
 }
 
 #[derive(derive_more::Display, derive_more::From)]

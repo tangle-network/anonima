@@ -152,7 +152,7 @@
 //! if necessary and open a unique substream for Substrate-based communications. If the PSM decides
 //! that we should disconnect a node, then that substream is closed.
 //!
-//! For more information about the PSM, see the *sc-peerset* crate.
+//! For more information about the PSM, see the *ac-peerset* crate.
 //!
 //! Note that at the moment there is no mechanism in place to solve the issues that arise where the
 //! two sides of a connection open the unique substream simultaneously. In order to not run into
@@ -245,10 +245,10 @@
 //!
 
 mod behaviour;
-mod chain;
+// mod chain;
 mod peer_info;
 mod discovery;
-mod on_demand_layer;
+// mod on_demand_layer;
 mod protocol;
 mod request_responses;
 mod schema;
@@ -257,8 +257,8 @@ mod transport;
 mod utils;
 
 // pub mod block_request_handler;
-pub mod bitswap;
-pub mod light_client_requests;
+// pub mod bitswap;
+// pub mod light_client_requests;
 pub mod config;
 pub mod error;
 pub mod gossip;
@@ -267,13 +267,13 @@ pub mod transactions;
 
 #[doc(inline)]
 pub use libp2p::{multiaddr, Multiaddr, PeerId};
-pub use protocol::{event::{DhtEvent, Event, ObservedRole}, sync::SyncState, PeerInfo};
+pub use protocol::{event::{DhtEvent, Event, ObservedRole}, PeerInfo};
 pub use service::{
 	NetworkService, NetworkWorker, RequestFailure, OutboundFailure, NotificationSender,
 	NotificationSenderReady, IfDisconnected,
 };
 
-pub use sc_peerset::ReputationChange;
+pub use ac_peerset::ReputationChange;
 use sp_runtime::traits::{Block as BlockT, NumberFor};
 
 /// The maximum allowed number of established connections per peer.

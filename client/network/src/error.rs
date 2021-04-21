@@ -31,8 +31,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
 	/// Io error
 	Io(std::io::Error),
-	/// Client error
-	Client(Box<sp_blockchain::Error>),
+	// / Client error
+	// Client(Box<sp_blockchain::Error>),
 	/// The same bootnode (based on address) is registered with two different peer ids.
 	#[display(
 		fmt = "The same bootnode (`{}`) is registered with two different peer ids: `{}` and `{}`",
@@ -80,7 +80,7 @@ impl std::error::Error for Error {
 	fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
 		match self {
 			Error::Io(ref err) => Some(err),
-			Error::Client(ref err) => Some(err),
+			// Error::Client(ref err) => Some(err),
 			Error::DuplicateBootnode { .. } => None,
 			Error::Prometheus(ref err) => Some(err),
 			Error::AddressesForAnotherTransport { .. } => None,

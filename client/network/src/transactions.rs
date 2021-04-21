@@ -151,13 +151,13 @@ impl TransactionsHandlerPrototype {
 	///
 	/// Important: the transactions handler is initially disabled and doesn't gossip transactions.
 	/// You must call [`TransactionsHandlerController::set_gossip_enabled`] to enable it.
-	pub fn build<B: BlockT + 'static, H: ExHashT>(
+	pub fn build<H: ExHashT>(
 		self,
-		service: Arc<NetworkService<B, H>>,
+		service: Arc<NetworkService<H>>,
 		local_role: config::Role,
-		transaction_pool: Arc<dyn TransactionPool<H, B>>,
+		// transaction_pool: Arc<dyn TransactionPool<H, B>>,
 		metrics_registry: Option<&Registry>,
-	) -> error::Result<(TransactionsHandler<B, H>, TransactionsHandlerController<H>)> {
+	) -> error::Result<(TransactionsHandler<H>, TransactionsHandlerController<H>)> {
 		let event_stream = service.event_stream("transactions-handler").boxed();
 		let (to_handler, from_controller) = mpsc::unbounded();
 		let gossip_enabled = Arc::new(AtomicBool::new(false));
@@ -171,7 +171,7 @@ impl TransactionsHandlerPrototype {
 			service,
 			event_stream,
 			peers: HashMap::new(),
-			transaction_pool,
+			// transaction_pool,
 			local_role,
 			from_controller,
 			metrics: if let Some(r) = metrics_registry {
@@ -225,7 +225,7 @@ enum ToHandler<H: ExHashT> {
 }
 
 /// Handler for transactions. Call [`TransactionsHandler::run`] to start the processing.
-pub struct TransactionsHandler<B: BlockT + 'static, H: ExHashT> {
+pub struct TransactionsHandler<H: ExHashT> {
 	protocol_name: Cow<'static, str>,
 	/// Interval at which we call `propagate_transactions`.
 	propagate_timeout: Pin<Box<dyn Stream<Item = ()> + Send>>,
@@ -237,12 +237,12 @@ pub struct TransactionsHandler<B: BlockT + 'static, H: ExHashT> {
 	/// multiple times concurrently.
 	pending_transactions_peers: HashMap<H, Vec<PeerId>>,
 	/// Network service to use to send messages and manage peers.
-	service: Arc<NetworkService<B, H>>,
+	service: Arc<NetworkService<H>>,
 	/// Stream of networking events.
 	event_stream: Pin<Box<dyn Stream<Item = Event> + Send>>,
 	// All connected peers
 	peers: HashMap<PeerId, Peer<H>>,
-	transaction_pool: Arc<dyn TransactionPool<H, B>>,
+	// transaction_pool: Arc<dyn TransactionPool<H, B>>,
 	gossip_enabled: Arc<AtomicBool>,
 	local_role: config::Role,
 	from_controller: mpsc::UnboundedReceiver<ToHandler<H>>,
@@ -258,7 +258,7 @@ struct Peer<H: ExHashT> {
 	role: ObservedRole,
 }
 
-impl<B: BlockT + 'static, H: ExHashT> TransactionsHandler<B, H> {
+impl<H: ExHashT> TransactionsHandler<H> {
 	/// Turns the [`TransactionsHandler`] into a future that should run forever and not be
 	/// interrupted.
 	pub async fn run(mut self) {
@@ -337,13 +337,13 @@ impl<B: BlockT + 'static, H: ExHashT> TransactionsHandler<B, H> {
 						continue;
 					}
 
-					if let Ok(m) = <message::Transactions<B::Extrinsic> as Decode>::decode(
-						&mut message.as_ref(),
-					) {
-						self.on_transactions(remote, m);
-					} else {
-						warn!(target: "sub-libp2p", "Failed to decode transactions list");
-					}
+					// if let Ok(m) = <message::Transactions<B::Extrinsic> as Decode>::decode(
+					// 	&mut message.as_ref(),
+					// ) {
+					// 	self.on_transactions(remote, m);
+					// } else {
+					// 	warn!(target: "sub-libp2p", "Failed to decode transactions list");
+					// }
 				}
 			},
 
@@ -352,58 +352,58 @@ impl<B: BlockT + 'static, H: ExHashT> TransactionsHandler<B, H> {
 		}
 	}
 
-	/// Called when peer sends us new transactions
-	fn on_transactions(
-		&mut self,
-		who: PeerId,
-		transactions: message::Transactions<B::Extrinsic>,
-	) {
-		// sending transaction to light node is considered a bad behavior
-		if matches!(self.local_role, config::Role::Light) {
-			debug!(target: "sync", "Peer {} is trying to send transactions to the light node", who);
-			self.service.disconnect_peer(who, self.protocol_name.clone());
-			self.service.report_peer(who, rep::UNEXPECTED_TRANSACTIONS);
-			return;
-		}
+	// / Called when peer sends us new transactions
+	// fn on_transactions(
+	// 	&mut self,
+	// 	who: PeerId,
+	// 	transactions: message::Transactions<B::Extrinsic>,
+	// ) {
+	// 	// sending transaction to light node is considered a bad behavior
+	// 	if matches!(self.local_role, config::Role::Light) {
+	// 		debug!(target: "sync", "Peer {} is trying to send transactions to the light node", who);
+	// 		self.service.disconnect_peer(who, self.protocol_name.clone());
+	// 		self.service.report_peer(who, rep::UNEXPECTED_TRANSACTIONS);
+	// 		return;
+	// 	}
 
-		// Accept transactions only when enabled
-		if !self.gossip_enabled.load(Ordering::Relaxed) {
-			trace!(target: "sync", "{} Ignoring transactions while disabled", who);
-			return;
-		}
+	// 	// Accept transactions only when enabled
+	// 	if !self.gossip_enabled.load(Ordering::Relaxed) {
+	// 		trace!(target: "sync", "{} Ignoring transactions while disabled", who);
+	// 		return;
+	// 	}
 
-		trace!(target: "sync", "Received {} transactions from {}", transactions.len(), who);
-		if let Some(ref mut peer) = self.peers.get_mut(&who) {
-			for t in transactions {
-				if self.pending_transactions.len() > MAX_PENDING_TRANSACTIONS {
-					debug!(
-						target: "sync",
-						"Ignoring any further transactions that exceed `MAX_PENDING_TRANSACTIONS`({}) limit",
-						MAX_PENDING_TRANSACTIONS,
-					);
-					break;
-				}
+	// 	trace!(target: "sync", "Received {} transactions from {}", transactions.len(), who);
+	// 	if let Some(ref mut peer) = self.peers.get_mut(&who) {
+	// 		for t in transactions {
+	// 			if self.pending_transactions.len() > MAX_PENDING_TRANSACTIONS {
+	// 				debug!(
+	// 					target: "sync",
+	// 					"Ignoring any further transactions that exceed `MAX_PENDING_TRANSACTIONS`({}) limit",
+	// 					MAX_PENDING_TRANSACTIONS,
+	// 				);
+	// 				break;
+	// 			}
 
-				let hash = self.transaction_pool.hash_of(&t);
-				peer.known_transactions.insert(hash.clone());
+	// 			let hash = self.transaction_pool.hash_of(&t);
+	// 			peer.known_transactions.insert(hash.clone());
 
-				self.service.report_peer(who.clone(), rep::ANY_TRANSACTION);
+	// 			self.service.report_peer(who.clone(), rep::ANY_TRANSACTION);
 
-				match self.pending_transactions_peers.entry(hash.clone()) {
-					Entry::Vacant(entry) => {
-						self.pending_transactions.push(PendingTransaction {
-							validation: self.transaction_pool.import(t),
-							tx_hash: hash,
-						});
-						entry.insert(vec![who.clone()]);
-					},
-					Entry::Occupied(mut entry) => {
-						entry.get_mut().push(who.clone());
-					}
-				}
-			}
-		}
-	}
+	// 			match self.pending_transactions_peers.entry(hash.clone()) {
+	// 				Entry::Vacant(entry) => {
+	// 					self.pending_transactions.push(PendingTransaction {
+	// 						validation: self.transaction_pool.import(t),
+	// 						tx_hash: hash,
+	// 					});
+	// 					entry.insert(vec![who.clone()]);
+	// 				},
+	// 				Entry::Occupied(mut entry) => {
+	// 					entry.get_mut().push(who.clone());
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	fn on_handle_transaction_import(&mut self, who: PeerId, import: TransactionImport) {
 		match import {
@@ -430,49 +430,49 @@ impl<B: BlockT + 'static, H: ExHashT> TransactionsHandler<B, H> {
 		}
 	}
 
-	fn do_propagate_transactions(
-		&mut self,
-		transactions: &[(H, B::Extrinsic)],
-	) -> HashMap<H, Vec<String>> {
-		let mut propagated_to = HashMap::<_, Vec<_>>::new();
-		let mut propagated_transactions = 0;
+	// fn do_propagate_transactions(
+	// 	&mut self,
+	// 	transactions: &[(H, B::Extrinsic)],
+	// ) -> HashMap<H, Vec<String>> {
+	// 	let mut propagated_to = HashMap::<_, Vec<_>>::new();
+	// 	let mut propagated_transactions = 0;
 
-		for (who, peer) in self.peers.iter_mut() {
-			// never send transactions to the light node
-			if matches!(peer.role, ObservedRole::Light) {
-				continue;
-			}
+	// 	for (who, peer) in self.peers.iter_mut() {
+	// 		// never send transactions to the light node
+	// 		if matches!(peer.role, ObservedRole::Light) {
+	// 			continue;
+	// 		}
 
-			let (hashes, to_send): (Vec<_>, Vec<_>) = transactions
-				.iter()
-				.filter(|&(ref hash, _)| peer.known_transactions.insert(hash.clone()))
-				.cloned()
-				.unzip();
+	// 		let (hashes, to_send): (Vec<_>, Vec<_>) = transactions
+	// 			.iter()
+	// 			.filter(|&(ref hash, _)| peer.known_transactions.insert(hash.clone()))
+	// 			.cloned()
+	// 			.unzip();
 
-			propagated_transactions += hashes.len();
+	// 		propagated_transactions += hashes.len();
 
-			if !to_send.is_empty() {
-				for hash in hashes {
-					propagated_to
-						.entry(hash)
-						.or_default()
-						.push(who.to_base58());
-				}
-				trace!(target: "sync", "Sending {} transactions to {}", to_send.len(), who);
-				self.service.write_notification(
-					who.clone(),
-					self.protocol_name.clone(),
-					to_send.encode()
-				);
-			}
-		}
+	// 		if !to_send.is_empty() {
+	// 			for hash in hashes {
+	// 				propagated_to
+	// 					.entry(hash)
+	// 					.or_default()
+	// 					.push(who.to_base58());
+	// 			}
+	// 			trace!(target: "sync", "Sending {} transactions to {}", to_send.len(), who);
+	// 			self.service.write_notification(
+	// 				who.clone(),
+	// 				self.protocol_name.clone(),
+	// 				to_send.encode()
+	// 			);
+	// 		}
+	// 	}
 
-		if let Some(ref metrics) = self.metrics {
-			metrics.propagated_transactions.inc_by(propagated_transactions as _)
-		}
+	// 	if let Some(ref metrics) = self.metrics {
+	// 		metrics.propagated_transactions.inc_by(propagated_transactions as _)
+	// 	}
 
-		propagated_to
-	}
+	// 	propagated_to
+	// }
 
 	/// Call when we must propagate ready transactions to peers.
 	fn propagate_transactions(&mut self) {

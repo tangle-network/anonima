@@ -19,46 +19,46 @@
 //! Network packet message types. These get serialized and put into the lower level protocol payload.
 
 use bitflags::bitflags;
-use sp_runtime::{ConsensusEngineId, traits::{Block as BlockT, Header as HeaderT}};
+// use sp_runtime::{ConsensusEngineId, traits::{Block as BlockT, Header as HeaderT}};
 use codec::{Encode, Decode, Input, Output, Error};
 pub use self::generic::{
-	BlockAnnounce, RemoteCallRequest, RemoteReadRequest,
+	RemoteCallRequest, RemoteReadRequest,
 	RemoteHeaderRequest, RemoteHeaderResponse,
 	RemoteChangesRequest, RemoteChangesResponse,
 	FromBlock, RemoteReadChildRequest, Roles,
 };
-use sc_client_api::StorageProof;
+// use sc_client_api::StorageProof;
 
 /// A unique ID of a request.
 pub type RequestId = u64;
 
-/// Type alias for using the message type using block type parameters.
-pub type Message<B> = generic::Message<
-	<B as BlockT>::Header,
-	<B as BlockT>::Hash,
-	<<B as BlockT>::Header as HeaderT>::Number,
-	<B as BlockT>::Extrinsic,
->;
+// / Type alias for using the message type using block type parameters.
+// pub type Message<B> = generic::Message<
+// 	<B as BlockT>::Header,
+// 	<B as BlockT>::Hash,
+// 	<<B as BlockT>::Header as HeaderT>::Number,
+// 	<B as BlockT>::Extrinsic,
+// >;
 
-/// Type alias for using the block request type using block type parameters.
-pub type BlockRequest<B> = generic::BlockRequest<
-	<B as BlockT>::Hash,
-	<<B as BlockT>::Header as HeaderT>::Number,
->;
+// / Type alias for using the block request type using block type parameters.
+// pub type BlockRequest<B> = generic::BlockRequest<
+// 	<B as BlockT>::Hash,
+// 	<<B as BlockT>::Header as HeaderT>::Number,
+// >;
 
-/// Type alias for using the BlockData type using block type parameters.
-pub type BlockData<B> = generic::BlockData<
-	<B as BlockT>::Header,
-	<B as BlockT>::Hash,
-	<B as BlockT>::Extrinsic,
->;
+// / Type alias for using the BlockData type using block type parameters.
+// pub type BlockData<B> = generic::BlockData<
+// 	<B as BlockT>::Header,
+// 	<B as BlockT>::Hash,
+// 	<B as BlockT>::Extrinsic,
+// >;
 
-/// Type alias for using the BlockResponse type using block type parameters.
-pub type BlockResponse<B> = generic::BlockResponse<
-	<B as BlockT>::Header,
-	<B as BlockT>::Hash,
-	<B as BlockT>::Extrinsic,
->;
+// / Type alias for using the BlockResponse type using block type parameters.
+// pub type BlockResponse<B> = generic::BlockResponse<
+// 	<B as BlockT>::Header,
+// 	<B as BlockT>::Hash,
+// 	<B as BlockT>::Extrinsic,
+// >;
 
 /// A set of transactions.
 pub type Transactions<E> = Vec<E>;
@@ -131,8 +131,8 @@ pub enum BlockState {
 pub struct RemoteCallResponse {
 	/// Id of a request this response was made for.
 	pub id: RequestId,
-	/// Execution proof.
-	pub proof: StorageProof,
+	// / Execution proof.
+	// pub proof: StorageProof,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Encode, Decode)]
@@ -140,29 +140,29 @@ pub struct RemoteCallResponse {
 pub struct RemoteReadResponse {
 	/// Id of a request this response was made for.
 	pub id: RequestId,
-	/// Read proof.
-	pub proof: StorageProof,
+	// / Read proof.
+	// pub proof: StorageProof,
 }
 
-/// Announcement summary used for debug logging.
-#[derive(Debug)]
-pub struct AnnouncementSummary<H: HeaderT> {
-	block_hash: H::Hash,
-	number: H::Number,
-	parent_hash: H::Hash,
-	state: Option<BlockState>,
-}
+// / Announcement summary used for debug logging.
+// #[derive(Debug)]
+// pub struct AnnouncementSummary<H: HeaderT> {
+// 	block_hash: H::Hash,
+// 	number: H::Number,
+// 	parent_hash: H::Hash,
+// 	state: Option<BlockState>,
+// }
 
-impl<H: HeaderT> generic::BlockAnnounce<H> {
-	pub fn summary(&self) -> AnnouncementSummary<H> {
-		AnnouncementSummary {
-			block_hash: self.header.hash(),
-			number: *self.header.number(),
-			parent_hash: self.header.parent_hash().clone(),
-			state: self.state,
-		}
-	}
-}
+// impl<H: HeaderT> generic::BlockAnnounce<H> {
+// 	pub fn summary(&self) -> AnnouncementSummary<H> {
+// 		AnnouncementSummary {
+// 			block_hash: self.header.hash(),
+// 			number: *self.header.number(),
+// 			parent_hash: self.header.parent_hash().clone(),
+// 			state: self.state,
+// 		}
+// 	}
+// }
 
 /// Generic types.
 pub mod generic {
@@ -171,8 +171,8 @@ pub mod generic {
 	// use sp_runtime::EncodedJustification;
 	use super::{
 		RemoteReadResponse, Transactions, Direction,
-		RequestId, BlockAttributes, RemoteCallResponse, ConsensusEngineId,
-		BlockState, StorageProof,
+		RequestId, BlockAttributes, RemoteCallResponse,
+		BlockState,
 	};
 
 	bitflags! {
@@ -230,14 +230,14 @@ pub mod generic {
 		}
 	}
 
-	/// Consensus is mostly opaque to us
-	#[derive(Debug, PartialEq, Eq, Clone, Encode, Decode)]
-	pub struct ConsensusMessage {
-		/// Identifies consensus engine.
-		pub protocol: ConsensusEngineId,
-		/// Message payload.
-		pub data: Vec<u8>,
-	}
+	// / Consensus is mostly opaque to us
+	// #[derive(Debug, PartialEq, Eq, Clone, Encode, Decode)]
+	// pub struct ConsensusMessage {
+	// 	/// Identifies consensus engine.
+	// 	pub protocol: ConsensusEngineId,
+	// 	/// Message payload.
+	// 	pub data: Vec<u8>,
+	// }
 
 	/// Block data sent in the response.
 	#[derive(Debug, PartialEq, Eq, Clone, Encode, Decode)]
@@ -278,8 +278,8 @@ pub mod generic {
 		BlockAnnounce(BlockAnnounce<Header>),
 		/// Transactions.
 		Transactions(Transactions<Extrinsic>),
-		/// Consensus protocol message.
-		Consensus(ConsensusMessage),
+		// / Consensus protocol message.
+		// Consensus(ConsensusMessage),
 		/// Remote method call request.
 		RemoteCallRequest(RemoteCallRequest<Hash>),
 		/// Remote method call response.
@@ -298,11 +298,11 @@ pub mod generic {
 		RemoteChangesResponse(RemoteChangesResponse<Number, Hash>),
 		/// Remote child storage read request.
 		RemoteReadChildRequest(RemoteReadChildRequest<Hash>),
-		/// Batch of consensus protocol messages.
+		// / Batch of consensus protocol messages.
 		// NOTE: index is incremented by 2 due to finality proof related
 		// messages that were removed.
-		#[codec(index = 17)]
-		ConsensusBatch(Vec<ConsensusMessage>),
+		// #[codec(index = 17)]
+		// ConsensusBatch(Vec<ConsensusMessage>),
 	}
 
 	/// Status sent on connection.
@@ -498,8 +498,8 @@ pub mod generic {
 		pub id: RequestId,
 		/// Header. None if proof generation has failed (e.g. header is unknown).
 		pub header: Option<Header>,
-		/// Header proof.
-		pub proof: StorageProof,
+		// / Header proof.
+		// pub proof: StorageProof,
 	}
 
 	#[derive(Debug, PartialEq, Eq, Clone, Encode, Decode)]
@@ -534,7 +534,7 @@ pub mod generic {
 		pub proof: Vec<Vec<u8>>,
 		/// Changes tries roots missing on the requester' node.
 		pub roots: Vec<(N, H)>,
-		/// Missing changes tries roots proof.
-		pub roots_proof: StorageProof,
+		// / Missing changes tries roots proof.
+		// pub roots_proof: StorageProof,
 	}
 }
