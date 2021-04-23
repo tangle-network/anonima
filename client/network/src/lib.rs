@@ -310,8 +310,8 @@ pub struct NetworkStatus {
 	// pub sync_state: SyncState,
 	// Target sync block number.
 	// pub best_seen_block: Option<NumberFor<B>>,
-	/// Number of peers participating in syncing.
-	pub num_sync_peers: u32,
+	// / Number of peers participating in syncing.
+	// pub num_sync_peers: u32,
 	/// Total number of connected peers
 	pub num_connected_peers: usize,
 	/// Total number of active peers.

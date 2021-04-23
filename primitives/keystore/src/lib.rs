@@ -16,7 +16,7 @@
 // limitations under the License.
 
 //! Keystore traits
-pub mod vrf;
+// pub mod vrf;
 
 use std::sync::Arc;
 use async_trait::async_trait;
@@ -25,7 +25,7 @@ use ap_core::{
 	crypto::{KeyTypeId, CryptoTypePublicPair},
 	ed25519, sr25519, ecdsa,
 };
-use crate::vrf::{VRFTranscriptData, VRFSignature};
+// use crate::vrf::{VRFTranscriptData, VRFSignature};
 
 /// CryptoStore error
 #[derive(Debug, derive_more::Display)]
@@ -175,24 +175,24 @@ pub trait CryptoStore: Send + Sync {
 		Ok(join_all(futs).await)
 	}
 
-	/// Generate VRF signature for given transcript data.
-	///
-	/// Receives KeyTypeId and Public key to be able to map
-	/// them to a private key that exists in the keystore which
-	/// is, in turn, used for signing the provided transcript.
-	///
-	/// Returns a result containing the signature data.
-	/// Namely, VRFOutput and VRFProof which are returned
-	/// inside the `VRFSignature` container struct.
-	///
-	/// This function will return `None` if the given `key_type` and `public` combination
-	/// doesn't exist in the keystore or an `Err` when something failed.
-	async fn sr25519_vrf_sign(
-		&self,
-		key_type: KeyTypeId,
-		public: &sr25519::Public,
-		transcript_data: VRFTranscriptData,
-	) -> Result<Option<VRFSignature>, Error>;
+	// / Generate VRF signature for given transcript data.
+	// /
+	// / Receives KeyTypeId and Public key to be able to map
+	// / them to a private key that exists in the keystore which
+	// / is, in turn, used for signing the provided transcript.
+	// /
+	// / Returns a result containing the signature data.
+	// / Namely, VRFOutput and VRFProof which are returned
+	// / inside the `VRFSignature` container struct.
+	// /
+	// / This function will return `None` if the given `key_type` and `public` combination
+	// / doesn't exist in the keystore or an `Err` when something failed.
+	// async fn sr25519_vrf_sign(
+	// 	&self,
+	// 	key_type: KeyTypeId,
+	// 	public: &sr25519::Public,
+	// 	transcript_data: VRFTranscriptData,
+	// ) -> Result<Option<VRFSignature>, Error>;
 }
 
 /// Sync version of the CryptoStore
@@ -334,30 +334,30 @@ pub trait SyncCryptoStore: CryptoStore + Send + Sync {
 		Ok(keys.iter().map(|k| SyncCryptoStore::sign_with(self, id, k, msg)).collect())
 	}
 
-	/// Generate VRF signature for given transcript data.
-	///
-	/// Receives KeyTypeId and Public key to be able to map
-	/// them to a private key that exists in the keystore which
-	/// is, in turn, used for signing the provided transcript.
-	///
-	/// Returns a result containing the signature data.
-	/// Namely, VRFOutput and VRFProof which are returned
-	/// inside the `VRFSignature` container struct.
-	///
-	/// This function will return `None` if the given `key_type` and `public` combination
-	/// doesn't exist in the keystore or an `Err` when something failed.
-	fn sr25519_vrf_sign(
-		&self,
-		key_type: KeyTypeId,
-		public: &sr25519::Public,
-		transcript_data: VRFTranscriptData,
-	) -> Result<Option<VRFSignature>, Error>;
+	// / Generate VRF signature for given transcript data.
+	// /
+	// / Receives KeyTypeId and Public key to be able to map
+	// / them to a private key that exists in the keystore which
+	// / is, in turn, used for signing the provided transcript.
+	// /
+	// / Returns a result containing the signature data.
+	// / Namely, VRFOutput and VRFProof which are returned
+	// / inside the `VRFSignature` container struct.
+	// /
+	// / This function will return `None` if the given `key_type` and `public` combination
+	// / doesn't exist in the keystore or an `Err` when something failed.
+	// fn sr25519_vrf_sign(
+	// 	&self,
+	// 	key_type: KeyTypeId,
+	// 	public: &sr25519::Public,
+	// 	transcript_data: VRFTranscriptData,
+	// ) -> Result<Option<VRFSignature>, Error>;
 }
 
 /// A pointer to a keystore.
 pub type SyncCryptoStorePtr = Arc<dyn SyncCryptoStore>;
 
-sp_externalities::decl_extension! {
-	/// The keystore extension to register/retrieve from the externalities.
-	pub struct KeystoreExt(SyncCryptoStorePtr);
-}
+// sp_externalities::decl_extension! {
+// 	/// The keystore extension to register/retrieve from the externalities.
+// 	pub struct KeystoreExt(SyncCryptoStorePtr);
+// }

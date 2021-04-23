@@ -61,7 +61,7 @@ const MAX_TRANSACTIONS_SIZE: u64 = 16 * 1024 * 1024;
 const MAX_PENDING_TRANSACTIONS: usize = 8192;
 
 mod rep {
-	use sc_peerset::ReputationChange as Rep;
+	use ac_peerset::ReputationChange as Rep;
 	/// Reputation change when a peer sends us any transaction.
 	///
 	/// This forces node to verify it, thus the negative value here. Once transaction is verified,
@@ -424,10 +424,10 @@ impl<H: ExHashT> TransactionsHandler<H> {
 		if !self.gossip_enabled.load(Ordering::Relaxed) {
 			return;
 		}
-		if let Some(transaction) = self.transaction_pool.transaction(hash) {
-			let propagated_to = self.do_propagate_transactions(&[(hash.clone(), transaction)]);
-			self.transaction_pool.on_broadcasted(propagated_to);
-		}
+		// if let Some(transaction) = self.transaction_pool.transaction(hash) {
+		// 	let propagated_to = self.do_propagate_transactions(&[(hash.clone(), transaction)]);
+		// 	self.transaction_pool.on_broadcasted(propagated_to);
+		// }
 	}
 
 	// fn do_propagate_transactions(
@@ -481,8 +481,8 @@ impl<H: ExHashT> TransactionsHandler<H> {
 			return;
 		}
 		debug!(target: "sync", "Propagating transactions");
-		let transactions = self.transaction_pool.transactions();
-		let propagated_to = self.do_propagate_transactions(&transactions);
-		self.transaction_pool.on_broadcasted(propagated_to);
+		// let transactions = self.transaction_pool.transactions();
+		// let propagated_to = self.do_propagate_transactions(&transactions);
+		// self.transaction_pool.on_broadcasted(propagated_to);
 	}
 }

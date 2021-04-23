@@ -444,7 +444,7 @@ impl<H: ExHashT> NetworkWorker<H> {
 		NetworkStatus {
 			// sync_state: self.sync_state(),
 			// best_seen_block: self.best_seen_block(),
-			num_sync_peers: self.num_sync_peers(),
+			// num_sync_peers: self.num_sync_peers(),
 			num_connected_peers: self.num_connected_peers(),
 			num_active_peers: self.num_active_peers(),
 			total_bytes_inbound: self.total_bytes_inbound(),
@@ -482,25 +482,25 @@ impl<H: ExHashT> NetworkWorker<H> {
 	// 	self.network_service.user_protocol().best_seen_block()
 	// }
 
-	/// Number of peers participating in syncing.
-	pub fn num_sync_peers(&self) -> u32 {
-		self.network_service.user_protocol().num_sync_peers()
-	}
+	// / Number of peers participating in syncing.
+	// pub fn num_sync_peers(&self) -> u32 {
+	// 	self.network_service.user_protocol().num_sync_peers()
+	// }
 
-	/// Number of blocks in the import queue.
-	pub fn num_queued_blocks(&self) -> u32 {
-		self.network_service.user_protocol().num_queued_blocks()
-	}
+	// / Number of blocks in the import queue.
+	// pub fn num_queued_blocks(&self) -> u32 {
+	// 	self.network_service.user_protocol().num_queued_blocks()
+	// }
 
-	/// Returns the number of downloaded blocks.
-	pub fn num_downloaded_blocks(&self) -> usize {
-		self.network_service.user_protocol().num_downloaded_blocks()
-	}
+	// / Returns the number of downloaded blocks.
+	// pub fn num_downloaded_blocks(&self) -> usize {
+	// 	self.network_service.user_protocol().num_downloaded_blocks()
+	// }
 
-	/// Number of active sync requests.
-	pub fn num_sync_requests(&self) -> usize {
-		self.network_service.user_protocol().num_sync_requests()
-	}
+	// / Number of active sync requests.
+	// pub fn num_sync_requests(&self) -> usize {
+	// 	self.network_service.user_protocol().num_sync_requests()
+	// }
 
 	/// Adds an address for a node.
 	pub fn add_known_address(&mut self, peer_id: PeerId, addr: Multiaddr) {
@@ -882,21 +882,21 @@ impl<H: ExHashT> NetworkService<H> {
 		});
 	}
 
-	/// You may call this when new transactons are imported by the transaction pool.
-	///
-	/// All transactions will be fetched from the `TransactionPool` that was passed at
-	/// initialization as part of the configuration and propagated to peers.
-	pub fn trigger_repropagate(&self) {
-		let _ = self.to_worker.unbounded_send(ServiceToWorkerMsg::PropagateTransactions);
-	}
+	// / You may call this when new transactons are imported by the transaction pool.
+	// /
+	// / All transactions will be fetched from the `TransactionPool` that was passed at
+	// / initialization as part of the configuration and propagated to peers.
+	// pub fn trigger_repropagate(&self) {
+	// 	let _ = self.to_worker.unbounded_send(ServiceToWorkerMsg::PropagateTransactions);
+	// }
 
-	/// You must call when new transaction is imported by the transaction pool.
-	///
-	/// This transaction will be fetched from the `TransactionPool` that was passed at
-	/// initialization as part of the configuration and propagated to peers.
-	pub fn propagate_transaction(&self, hash: H) {
-		let _ = self.to_worker.unbounded_send(ServiceToWorkerMsg::PropagateTransaction(hash));
-	}
+	// / You must call when new transaction is imported by the transaction pool.
+	// /
+	// / This transaction will be fetched from the `TransactionPool` that was passed at
+	// / initialization as part of the configuration and propagated to peers.
+	// pub fn propagate_transaction(&self, hash: H) {
+	// 	let _ = self.to_worker.unbounded_send(ServiceToWorkerMsg::PropagateTransaction(hash));
+	// }
 
 	// / Make sure an important block is propagated to peers.
 	// /
@@ -1451,18 +1451,18 @@ impl<H: ExHashT> Future for NetworkWorker<H> {
 
 			match poll_value {
 				Poll::Pending => break,
-				Poll::Ready(SwarmEvent::Behaviour(BehaviourOut::BlockImport(origin, blocks))) => {
-					if let Some(metrics) = this.metrics.as_ref() {
-						metrics.import_queue_blocks_submitted.inc();
-					}
-					this.import_queue.import_blocks(origin, blocks);
-				},
-				Poll::Ready(SwarmEvent::Behaviour(BehaviourOut::JustificationImport(origin, hash, nb, justifications))) => {
-					if let Some(metrics) = this.metrics.as_ref() {
-						metrics.import_queue_justifications_submitted.inc();
-					}
-					this.import_queue.import_justifications(origin, hash, nb, justifications);
-				},
+				// Poll::Ready(SwarmEvent::Behaviour(BehaviourOut::BlockImport(origin, blocks))) => {
+				// 	if let Some(metrics) = this.metrics.as_ref() {
+				// 		metrics.import_queue_blocks_submitted.inc();
+				// 	}
+				// 	this.import_queue.import_blocks(origin, blocks);
+				// },
+				// Poll::Ready(SwarmEvent::Behaviour(BehaviourOut::JustificationImport(origin, hash, nb, justifications))) => {
+				// 	if let Some(metrics) = this.metrics.as_ref() {
+				// 		metrics.import_queue_justifications_submitted.inc();
+				// 	}
+				// 	this.import_queue.import_justifications(origin, hash, nb, justifications);
+				// },
 				Poll::Ready(SwarmEvent::Behaviour(BehaviourOut::InboundRequest { protocol, result, .. })) => {
 					if let Some(metrics) = this.metrics.as_ref() {
 						match result {
@@ -1655,12 +1655,12 @@ impl<H: ExHashT> Future for NetworkWorker<H> {
 						};
 						let reason = match cause {
 							Some(ConnectionError::IO(_)) => "transport-error",
-							Some(ConnectionError::Handler(NodeHandlerWrapperError::Handler(EitherError::A(EitherError::A(
-								EitherError::A(EitherError::B(EitherError::A(
-								PingFailure::Timeout)))))))) => "ping-timeout",
-							Some(ConnectionError::Handler(NodeHandlerWrapperError::Handler(EitherError::A(EitherError::A(
-								EitherError::A(EitherError::A(
-								NotifsHandlerError::SyncNotificationsClogged))))))) => "sync-notifications-clogged",
+							// Some(ConnectionError::Handler(NodeHandlerWrapperError::Handler(EitherError::A(EitherError::A(
+							// 	EitherError::A(EitherError::B(EitherError::A(
+							// 	PingFailure::Timeout)))))))) => "ping-timeout",
+							// Some(ConnectionError::Handler(NodeHandlerWrapperError::Handler(EitherError::A(EitherError::A(
+							// 	EitherError::A(EitherError::A(
+							// 	NotifsHandlerError::SyncNotificationsClogged))))))) => "sync-notifications-clogged",
 							Some(ConnectionError::Handler(NodeHandlerWrapperError::Handler(_))) => "protocol-error",
 							Some(ConnectionError::Handler(NodeHandlerWrapperError::KeepAliveTimeout)) => "keep-alive-timeout",
 							None => "actively-closed",

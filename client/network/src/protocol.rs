@@ -70,7 +70,7 @@ const TICK_TIMEOUT: time::Duration = time::Duration::from_millis(1100);
 /// Maximum number of known block hashes to keep for a peer.
 const MAX_KNOWN_BLOCKS: usize = 1024; // ~32kb per peer + LruHashSet overhead
 /// Maximum allowed size for a block announce.
-const MAX_BLOCK_ANNOUNCE_SIZE: u64 = 1024 * 1024;
+const MAX_ANNOUNCE_SIZE: u64 = 1024 * 1024;
 
 /// Maximum size used for notifications in the block announce and transaction protocols.
 // Must be equal to `max(MAX_BLOCK_ANNOUNCE_SIZE, MAX_TRANSACTIONS_SIZE)`.
@@ -161,7 +161,7 @@ pub struct Protocol {
 	/// Used to report reputation changes.
 	peerset_handle: ac_peerset::PeersetHandle,
 	/// Handles opening the unique substream and sending and receiving raw messages.
-	// behaviour: Notifications,
+	behaviour: Notifications,
 	/// List of notifications protocols that have been registered.
 	notification_protocols: Vec<Cow<'static, str>>,
 	/// If we receive a new "substream open" event that contains an invalid handshake, we ask the
@@ -175,7 +175,7 @@ pub struct Protocol {
 	metrics: Option<Metrics>,
 	/// The `PeerId`'s of all boot nodes.
 	boot_node_ids: HashSet<PeerId>,
-	//// A cache for the data that was associated to a block announcement.
+	// / A cache for the data that was associated to a block announcement.
 	// block_announce_data_cache: lru::LruCache<B::Hash, Vec<u8>>,
 }
 
@@ -221,34 +221,34 @@ impl Default for ProtocolConfig {
 	}
 }
 
-//// Handshake sent when we open a block announces substream.
-// #[derive(Debug, PartialEq, Eq, Clone, Encode, Decode)]
-// struct BlockAnnouncesHandshake<B: BlockT> {
-// 	/// Roles of the node.
-// 	roles: Roles,
-// 	/// Best block number.
-// 	best_number: NumberFor<B>,
-// 	/// Best block hash.
-// 	best_hash: B::Hash,
-// 	/// Genesis block hash.
-// 	genesis_hash: B::Hash,
-// }
+/// Handshake sent when we open announces substream.
+#[derive(Debug, PartialEq, Eq, Clone, Encode, Decode)]
+struct AnnouncesHandshake {
+	/// Roles of the node.
+	roles: Roles,
+	// / Best block number.
+	// best_number: NumberFor<B>,
+	// / Best block hash.
+	// best_hash: B::Hash,
+	// / Genesis block hash.
+	// genesis_hash: B::Hash,
+}
 
-// impl<B: BlockT> BlockAnnouncesHandshake<B> {
-// 	fn build(
-// 		protocol_config: &ProtocolConfig,
-// 		best_number: NumberFor<B>,
-// 		best_hash: B::Hash,
-// 		genesis_hash: B::Hash,
-// 	) -> Self {
-// 		BlockAnnouncesHandshake {
-// 			genesis_hash,
-// 			roles: protocol_config.roles,
-// 			best_number,
-// 			best_hash,
-// 		}
-// 	}
-// }
+impl AnnouncesHandshake {
+	fn build(
+		protocol_config: &ProtocolConfig,
+		// best_number: NumberFor<B>,
+		// best_hash: B::Hash,
+		// genesis_hash: B::Hash,
+	) -> Self {
+		AnnouncesHandshake {
+			// genesis_hash,
+			roles: protocol_config.roles,
+			// best_number,
+			// best_hash,
+		}
+	}
+}
 
 impl Protocol {
 	/// Create a new instance.
@@ -342,35 +342,35 @@ impl Protocol {
 			})
 		};
 
-		let block_announces_protocol: Cow<'static, str> = Cow::from({
+		let announces_protocol: Cow<'static, str> = Cow::from({
 			let mut proto = String::new();
 			proto.push_str("/");
 			proto.push_str(protocol_id.as_ref());
-			proto.push_str("/block-announces/1");
+			proto.push_str("/announces/1");
 			proto
 		});
 
-		// let behaviour = {
-		// 	let best_number = info.best_number;
-		// 	let best_hash = info.best_hash;
-		// 	let genesis_hash = info.genesis_hash;
+		let behaviour = {
+			// let best_number = info.best_number;
+			// let best_hash = info.best_hash;
+			// let genesis_hash = info.genesis_hash;
 
-		// 	let block_announces_handshake = BlockAnnouncesHandshake::<B>::build(
-		// 		&config,
-		// 		best_number,
-		// 		best_hash,
-		// 		genesis_hash,
-		// 	).encode();
+			let announces_handshake = AnnouncesHandshake::build(
+				&config,
+				// best_number,
+				// best_hash,
+				// genesis_hash,
+			).encode();
 
-		// 	Notifications::new(
-		// 		peerset,
-		// 		iter::once((block_announces_protocol, block_announces_handshake, MAX_BLOCK_ANNOUNCE_SIZE))
-		// 			.chain(network_config.extra_sets.iter()
-		// 				.zip(notifications_protocols_handshakes)
-		// 				.map(|(s, hs)| (s.notifications_protocol.clone(), hs, s.max_notification_size))
-		// 			),
-		// 	)
-		// };
+			Notifications::new(
+				peerset,
+				iter::once((announces_protocol, announces_handshake, MAX_ANNOUNCE_SIZE))
+					.chain(network_config.extra_sets.iter()
+						.zip(notifications_protocols_handshakes)
+						.map(|(s, hs)| (s.notifications_protocol.clone(), hs, s.max_notification_size))
+					),
+			)
+		};
 
 		// let block_announce_data_cache = lru::LruCache::new(
 		// 	network_config.default_peers_set.in_peers as usize
@@ -387,7 +387,7 @@ impl Protocol {
 			// sync,
 			important_peers,
 			peerset_handle: peerset_handle.clone(),
-			// behaviour,
+			behaviour,
 			notification_protocols:
 				network_config.extra_sets.iter().map(|s| s.notifications_protocol.clone()).collect(),
 			bad_handshake_substreams: Default::default(),
@@ -1389,7 +1389,7 @@ impl NetworkBehaviour for Protocol {
 							// }
 					// 	}
 					// }
-
+					CustomMessageOutcome::None
 				} else {
 					match (message::Roles::decode_all(&received_handshake[..]), self.peers.get(&peer_id)) {
 						(Ok(roles), _) =>
