@@ -81,7 +81,7 @@ impl<M> QueuedSender<M> {
 	/// In addition to the [`QueuedSender`], also returns a `Future` whose role is to drive
 	/// the messages sending forward.
 	pub fn new<H, F>(
-		service: Arc<NetworkService<H>>,
+		service: Arc<NetworkService>,
 		peer_id: PeerId,
 		protocol: Cow<'static, str>,
 		queue_size_limit: usize,
@@ -189,9 +189,9 @@ type MessageQueue<M> = VecDeque<M>;
 /// [`MessageQueue`] shared between [`QueuedSender`] and background future.
 type SharedMessageQueue<M> = Arc<Mutex<MessageQueue<M>>>;
 
-async fn create_background_future<H: ExHashT, M, F: Fn(M) -> Vec<u8>>(
+async fn create_background_future<M, F: Fn(M) -> Vec<u8>>(
 	mut wait_for_sender: Receiver<()>,
-	service: Arc<NetworkService<H>>,
+	service: Arc<NetworkService>,
 	peer_id: PeerId,
 	protocol: Cow<'static, str>,
 	shared_message_queue: SharedMessageQueue<M>,

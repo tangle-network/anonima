@@ -78,6 +78,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.9.3",
+ "sp-debug-derive",
  "sp-externalities",
  "sp-runtime-interface",
  "sp-serializer",

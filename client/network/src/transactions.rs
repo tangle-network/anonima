@@ -153,7 +153,7 @@ impl TransactionsHandlerPrototype {
 	/// You must call [`TransactionsHandlerController::set_gossip_enabled`] to enable it.
 	pub fn build<H: ExHashT>(
 		self,
-		service: Arc<NetworkService<H>>,
+		service: Arc<NetworkService>,
 		local_role: config::Role,
 		// transaction_pool: Arc<dyn TransactionPool<H, B>>,
 		metrics_registry: Option<&Registry>,
@@ -237,7 +237,7 @@ pub struct TransactionsHandler<H: ExHashT> {
 	/// multiple times concurrently.
 	pending_transactions_peers: HashMap<H, Vec<PeerId>>,
 	/// Network service to use to send messages and manage peers.
-	service: Arc<NetworkService<H>>,
+	service: Arc<NetworkService>,
 	/// Stream of networking events.
 	event_stream: Pin<Box<dyn Stream<Item = Event> + Send>>,
 	// All connected peers

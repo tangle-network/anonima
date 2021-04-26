@@ -55,7 +55,7 @@ pub const DEV_PHRASE: &str = "bottom drive obey lake curtain smoke basket hold r
 pub const DEV_ADDRESS: &str = "5DfhGyQdFobKM8NsWvEeAKk5EQQgYe9AydgJ7rMB6E1EqRzV";
 
 /// The infallible type.
-// #[derive(crate::RuntimeDebug)]
+#[derive(crate::RuntimeDebug)]
 pub enum Infallible {}
 
 /// The length of the junction identifier. Note that this is also referred to as the
@@ -363,7 +363,7 @@ lazy_static::lazy_static! {
 macro_rules! ss58_address_format {
 	( $( $identifier:tt => ($number:expr, $name:expr, $desc:tt) )* ) => (
 		/// A known address (sub)format/network ID for SS58.
-		#[derive(Copy, Clone, PartialEq, Eq)]
+		#[derive(Copy, Clone, PartialEq, Eq, crate::RuntimeDebug)]
 		pub enum Ss58AddressFormat {
 			$(#[doc = $desc] $identifier),*,
 			/// Use a manually provided numeric value as a standard identifier
@@ -438,7 +438,7 @@ macro_rules! ss58_address_format {
 
 		/// Error encountered while parsing `Ss58AddressFormat` from &'_ str
 		/// unit struct for now.
-		#[derive(Copy, Clone, PartialEq, Eq)]
+		#[derive(Copy, Clone, PartialEq, Eq, crate::RuntimeDebug)]
 		pub struct ParseError;
 
 		impl<'a> TryFrom<&'a str> for Ss58AddressFormat {
@@ -1098,7 +1098,8 @@ pub trait CryptoType {
 /// Values whose first character is `_` are reserved for private use and won't conflict with any
 /// public modules.
 #[derive(
-	Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Encode, Decode, PassByInner
+	Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Encode, Decode, PassByInner,
+	crate::RuntimeDebug
 )]
 #[cfg_attr(feature = "std", derive(serde::Serialize, serde::Deserialize))]
 pub struct KeyTypeId(pub [u8; 4]);

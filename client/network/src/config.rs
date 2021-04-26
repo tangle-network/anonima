@@ -103,26 +103,26 @@ pub struct Params {
 	/// Registry for recording prometheus metrics to.
 	pub metrics_registry: Option<Registry>,
 
-	/// Request response configuration for the block request protocol.
-	///
-	/// [`RequestResponseConfig`] [`name`] is used to tag outgoing block requests with the correct
-	/// protocol name. In addition all of [`RequestResponseConfig`] is used to handle incoming block
-	/// requests, if enabled.
-	///
-	/// Can be constructed either via [`crate::block_request_handler::generate_protocol_config`]
-	/// allowing outgoing but not incoming requests, or constructed via
-	/// [`crate::block_request_handler::BlockRequestHandler::new`] allowing both outgoing and
-	/// incoming requests.
-	pub block_request_protocol_config: RequestResponseConfig,
+	// / Request response configuration for the block request protocol.
+	// /
+	// / [`RequestResponseConfig`] [`name`] is used to tag outgoing block requests with the correct
+	// / protocol name. In addition all of [`RequestResponseConfig`] is used to handle incoming block
+	// / requests, if enabled.
+	// /
+	// / Can be constructed either via [`crate::block_request_handler::generate_protocol_config`]
+	// / allowing outgoing but not incoming requests, or constructed via
+	// / [`crate::block_request_handler::BlockRequestHandler::new`] allowing both outgoing and
+	// / incoming requests.
+	// pub block_request_protocol_config: RequestResponseConfig,
 
-	/// Request response configuration for the light client request protocol.
-	///
-	/// Can be constructed either via
-	/// [`crate::light_client_requests::generate_protocol_config`] allowing outgoing but not
-	/// incoming requests, or constructed via
-	/// [`crate::light_client_requests::handler::LightClientRequestHandler::new`] allowing
-	/// both outgoing and incoming requests.
-	pub light_client_request_protocol_config: RequestResponseConfig,
+	// / Request response configuration for the light client request protocol.
+	// /
+	// / Can be constructed either via
+	// / [`crate::light_client_requests::generate_protocol_config`] allowing outgoing but not
+	// / incoming requests, or constructed via
+	// / [`crate::light_client_requests::handler::LightClientRequestHandler::new`] allowing
+	// / both outgoing and incoming requests.
+	// pub light_client_request_protocol_config: RequestResponseConfig,
 }
 
 /// Role of the local node.

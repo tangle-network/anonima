@@ -64,6 +64,7 @@ dependencies = [
  "secrecy",
  "serde",
  "sha2 0.9.3",
+ "sp-debug-derive",
  "sp-externalities",
  "sp-runtime-interface",
  "sp-std",
@@ -89,6 +90,7 @@ dependencies = [
  "rand 0.8.3",
  "rand_chacha 0.3.0",
  "serde",
+ "sp-externalities",
 ]
 
 [[package]]

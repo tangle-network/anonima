@@ -18,7 +18,7 @@ async-trait = "0.1.30"
 derive_more = "0.99.2"
 futures = "0.3.9"
 futures-util = "0.3.4"
-sp-application-crypto = { version = "3.0.0" }
+ap-application-crypto = { version = "0.1.0", path = "../../primitives/application-crypto" }
 ap-core = { version = "0.1.0", path = "../../primitives/core" }
 ap-keystore = { version = "0.1.0", path = "../../primitives/keystore" }
 hex = "0.4.0"

@@ -111,7 +111,7 @@ mod out_events;
 // mod tests;
 
 /// network service. Handles network IO and manages connectivity.
-pub struct NetworkService<H: ExHashT> {
+pub struct NetworkService {
 	/// Number of peers we're connected to.
 	num_connected: Arc<AtomicUsize>,
 	/// The local external addresses.
@@ -133,18 +133,18 @@ pub struct NetworkService<H: ExHashT> {
 	/// Field extracted from the [`Metrics`] struct and necessary to report the
 	/// notifications-related metrics.
 	notifications_sizes_metric: Option<HistogramVec>,
-	/// Marker to pin the `H` generic. Serves no purpose except to not break backwards
-	/// compatibility.
-	_marker: PhantomData<H>,
+	// / Marker to pin the `H` generic. Serves no purpose except to not break backwards
+	// / compatibility.
+	// _marker: PhantomData<H>,
 }
 
-impl<H: ExHashT> NetworkWorker<H> {
+impl NetworkWorker {
 	/// Creates the network service.
 	///
 	/// Returns a `NetworkWorker` that implements `Future` and must be regularly polled in order
 	/// for the network processing to advance. From it, you can extract a `NetworkService` using
 	/// `worker.service()`. The `NetworkService` can be shared through the codebase.
-	pub fn new(mut params: Params) -> Result<NetworkWorker<H>, Error> {
+	pub fn new(mut params: Params) -> Result<NetworkWorker, Error> {
 		// Ensure the listen addresses are consistent with the transport.
 		ensure_addresses_consistent_with_transport(
 			params.network_config.listen_addresses.iter(),
@@ -337,9 +337,9 @@ impl<H: ExHashT> NetworkWorker<H> {
 					local_public,
 					// light_client_request_sender,
 					discovery_config,
-					params.block_request_protocol_config,
+					// params.block_request_protocol_config,
 					// bitswap,
-					params.light_client_request_protocol_config,
+					// params.light_client_request_protocol_config,
 					params.network_config.request_response_protocols,
 				);
 
@@ -411,7 +411,7 @@ impl<H: ExHashT> NetworkWorker<H> {
 			peers_notifications_sinks: peers_notifications_sinks.clone(),
 			notifications_sizes_metric:
 				metrics.as_ref().map(|metrics| metrics.notifications_sizes.clone()),
-			_marker: PhantomData,
+			// _marker: PhantomData,
 		});
 
 		// let (tx_handler, tx_handler_controller) = transactions_handler_proto.build(
@@ -509,7 +509,7 @@ impl<H: ExHashT> NetworkWorker<H> {
 
 	/// Return a `NetworkService` that can be shared through the code base and can be used to
 	/// manipulate the worker.
-	pub fn service(&self) -> &Arc<NetworkService<H>> {
+	pub fn service(&self) -> &Arc<NetworkService> {
 		&self.service
 	}
 
@@ -620,7 +620,7 @@ impl<H: ExHashT> NetworkWorker<H> {
 	}
 }
 
-impl<H: ExHashT> NetworkService<H> {
+impl NetworkService {
 	/// Returns the local `PeerId`.
 	pub fn local_peer_id(&self) -> &PeerId {
 		&self.local_peer_id
@@ -1176,9 +1176,7 @@ impl<H: ExHashT> NetworkService<H> {
 // 	}
 // }
 
-impl<H> NetworkStateInfo for NetworkService<H>
-	where
-		H: ExHashT,
+impl NetworkStateInfo for NetworkService
 {
 	/// Returns the local external addresses.
 	fn external_addresses(&self) -> Vec<Multiaddr> {
@@ -1308,7 +1306,7 @@ enum ServiceToWorkerMsg {
 ///
 /// You are encouraged to poll this in a separate background thread or task.
 #[must_use = "The NetworkWorker must be polled in order for the network to advance"]
-pub struct NetworkWorker<H: ExHashT> {
+pub struct NetworkWorker {
 	/// Updated by the `NetworkWorker` and loaded by the `NetworkService`.
 	external_addresses: Arc<Mutex<Vec<Multiaddr>>>,
 	/// Updated by the `NetworkWorker` and loaded by the `NetworkService`.
@@ -1316,7 +1314,7 @@ pub struct NetworkWorker<H: ExHashT> {
 	/// Updated by the `NetworkWorker` and loaded by the `NetworkService`.
 	// is_major_syncing: Arc<AtomicBool>,
 	/// The network service that can be extracted and shared through the codebase.
-	service: Arc<NetworkService<H>>,
+	service: Arc<NetworkService>,
 	/// The *actual* network.
 	network_service: Swarm,
 	//// The import queue that was passed at initialization.
@@ -1338,7 +1336,7 @@ pub struct NetworkWorker<H: ExHashT> {
 	// tx_handler_controller: transactions::TransactionsHandlerController<H>,
 }
 
-impl<H: ExHashT> Future for NetworkWorker<H> {
+impl Future for NetworkWorker {
 	type Output = ();
 
 	fn poll(mut self: Pin<&mut Self>, cx: &mut std::task::Context) -> Poll<Self::Output> {
@@ -1821,7 +1819,7 @@ impl<H: ExHashT> Future for NetworkWorker<H> {
 	}
 }
 
-impl<H: ExHashT> Unpin for NetworkWorker<H> {
+impl Unpin for NetworkWorker {
 }
 
 /// The libp2p swarm, customized for our needs.

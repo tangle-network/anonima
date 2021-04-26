@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Shareable Substrate types.
+//! Shareable types.
 
 #![warn(missing_docs)]
 
@@ -44,7 +44,7 @@ pub use serde;
 #[doc(hidden)]
 pub use codec::{Encode, Decode};
 
-// pub use sp_debug_derive::RuntimeDebug;
+pub use sp_debug_derive::RuntimeDebug;
 
 #[cfg(feature = "std")]
 pub use impl_serde::serialize as bytes;
