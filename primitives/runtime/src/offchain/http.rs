@@ -52,8 +52,8 @@ use sp_std::str;
 use sp_std::prelude::Vec;
 #[cfg(not(feature = "std"))]
 use sp_std::prelude::vec;
-use sp_core::RuntimeDebug;
-use sp_core::offchain::{
+use ap_core::RuntimeDebug;
+use ap_core::offchain::{
 	Timestamp,
 	HttpRequestId as RequestId,
 	HttpRequestStatus as RequestStatus,
@@ -222,7 +222,7 @@ impl<'a, I: AsRef<[u8]>, T: IntoIterator<Item=I>> Request<'a, T> {
 		let meta = &[];
 
 		// start an http request.
-		let id = sp_io::offchain::http_request_start(
+		let id = ap_io::offchain::http_request_start(
 			self.method.as_ref(),
 			self.url,
 			meta,
@@ -230,7 +230,7 @@ impl<'a, I: AsRef<[u8]>, T: IntoIterator<Item=I>> Request<'a, T> {
 
 		// add custom headers
 		for header in &self.headers {
-			sp_io::offchain::http_request_add_header(
+			ap_io::offchain::http_request_add_header(
 				id,
 				header.name(),
 				header.value(),
@@ -239,11 +239,11 @@ impl<'a, I: AsRef<[u8]>, T: IntoIterator<Item=I>> Request<'a, T> {
 
 		// write body
 		for chunk in self.body {
-			sp_io::offchain::http_request_write_body(id, chunk.as_ref(), self.deadline)?;
+			ap_io::offchain::http_request_write_body(id, chunk.as_ref(), self.deadline)?;
 		}
 
 		// finalize the request
-		sp_io::offchain::http_request_write_body(id, &[], self.deadline)?;
+		ap_io::offchain::http_request_write_body(id, &[], self.deadline)?;
 
 		Ok(PendingRequest {
 			id,
@@ -308,7 +308,7 @@ impl PendingRequest {
 		deadline: impl Into<Option<Timestamp>>
 	) -> Vec<Result<HttpResult, PendingRequest>> {
 		let ids = requests.iter().map(|r| r.id).collect::<Vec<_>>();
-		let statuses = sp_io::offchain::http_response_wait(&ids, deadline.into());
+		let statuses = ap_io::offchain::http_response_wait(&ids, deadline.into());
 
 		statuses
 			.into_iter()
@@ -347,7 +347,7 @@ impl Response {
 	pub fn headers(&mut self) -> &Headers {
 		if self.headers.is_none() {
 			self.headers = Some(
-				Headers { raw: sp_io::offchain::http_response_headers(self.id) },
+				Headers { raw: ap_io::offchain::http_response_headers(self.id) },
 			);
 		}
 		self.headers.as_ref().expect("Headers were just set; qed")
@@ -427,7 +427,7 @@ impl Iterator for ResponseBody {
 		}
 
 		if self.filled_up_to.is_none() {
-			let result = sp_io::offchain::http_response_read_body(
+			let result = ap_io::offchain::http_response_read_body(
 				self.id,
 				&mut self.buffer,
 				self.deadline);
@@ -516,8 +516,8 @@ impl<'a> HeadersIterator<'a> {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use sp_io::TestExternalities;
-	use sp_core::offchain::{
+	use ap_io::TestExternalities;
+	use ap_core::offchain::{
 		OffchainExt,
 		testing,
 	};

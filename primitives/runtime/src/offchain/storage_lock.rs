@@ -64,8 +64,8 @@
 use crate::offchain::storage::StorageValueRef;
 use crate::traits::AtLeast32BitUnsigned;
 use codec::{Codec, Decode, Encode};
-use sp_core::offchain::{Duration, Timestamp};
-use sp_io::offchain;
+use ap_core::offchain::{Duration, Timestamp};
+use ap_io::offchain;
 
 /// Default expiry duration for time based locks in milliseconds.
 const STORAGE_LOCK_DEFAULT_EXPIRY_DURATION: Duration = Duration::from_millis(20_000);
@@ -98,7 +98,7 @@ pub trait Lockable: Sized {
 	/// Note that `deadline` is only passed to allow optimizations
 	/// for `Lockables` which have a time based component.
 	fn snooze(_deadline: &Self::Deadline) {
-		sp_io::offchain::sleep_until(
+		ap_io::offchain::sleep_until(
 			offchain::timestamp().add(STORAGE_LOCK_PER_CHECK_ITERATION_SNOOZE_MAX),
 		);
 	}
@@ -141,7 +141,7 @@ impl Lockable for Time {
 			min(remainder, STORAGE_LOCK_PER_CHECK_ITERATION_SNOOZE_MAX),
 			STORAGE_LOCK_PER_CHECK_ITERATION_SNOOZE_MIN,
 		);
-		sp_io::offchain::sleep_until(now.add(snooze));
+		ap_io::offchain::sleep_until(now.add(snooze));
 	}
 }
 
@@ -234,7 +234,7 @@ impl<B: BlockNumberProvider> Lockable for BlockAndTime<B> {
 			min(remainder, STORAGE_LOCK_PER_CHECK_ITERATION_SNOOZE_MAX),
 			STORAGE_LOCK_PER_CHECK_ITERATION_SNOOZE_MIN,
 		);
-		sp_io::offchain::sleep_until(now.add(snooze));
+		ap_io::offchain::sleep_until(now.add(snooze));
 	}
 }
 
@@ -453,8 +453,8 @@ pub trait BlockNumberProvider {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use sp_core::offchain::{testing, OffchainExt};
-	use sp_io::TestExternalities;
+	use ap_core::offchain::{testing, OffchainExt};
+	use ap_io::TestExternalities;
 
 	const VAL_1: u32 = 0u32;
 	const VAL_2: u32 = 0xFFFF_FFFFu32;

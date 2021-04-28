@@ -17,11 +17,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::error::Result;
-use sc_service::config::KeystoreConfig;
+use ac_service::config::KeystoreConfig;
 use std::{fs, path::{PathBuf, Path}};
 use structopt::StructOpt;
 use crate::error;
-use sp_core::crypto::SecretString;
+use ap_core::crypto::SecretString;
 
 /// default sub directory for the key store
 const DEFAULT_KEYSTORE_CONFIG_PATH: &'static str = "keystore";

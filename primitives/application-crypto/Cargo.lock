@@ -140,8 +140,11 @@ dependencies = [
  "async-trait",
  "derive_more",
  "futures",
+ "merlin",
  "parity-scale-codec",
  "parking_lot",
+ "schnorrkel",
+ "sp-externalities",
 ]
 
 [[package]]

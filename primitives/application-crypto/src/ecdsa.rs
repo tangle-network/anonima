@@ -41,19 +41,19 @@ impl RuntimePublic for Public {
 	type Signature = Signature;
 
 	fn all(key_type: KeyTypeId) -> crate::Vec<Self> {
-		sp_io::crypto::ecdsa_public_keys(key_type)
+		ap_io::crypto::ecdsa_public_keys(key_type)
 	}
 
 	fn generate_pair(key_type: KeyTypeId, seed: Option<Vec<u8>>) -> Self {
-		sp_io::crypto::ecdsa_generate(key_type, seed)
+		ap_io::crypto::ecdsa_generate(key_type, seed)
 	}
 
 	fn sign<M: AsRef<[u8]>>(&self, key_type: KeyTypeId, msg: &M) -> Option<Self::Signature> {
-		sp_io::crypto::ecdsa_sign(key_type, self, msg.as_ref())
+		ap_io::crypto::ecdsa_sign(key_type, self, msg.as_ref())
 	}
 
 	fn verify<M: AsRef<[u8]>>(&self, msg: &M, signature: &Self::Signature) -> bool {
-		sp_io::crypto::ecdsa_verify(&signature, msg.as_ref(), self)
+		ap_io::crypto::ecdsa_verify(&signature, msg.as_ref(), self)
 	}
 
 	fn to_raw_vec(&self) -> Vec<u8> {

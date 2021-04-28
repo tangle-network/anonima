@@ -43,9 +43,9 @@ pub struct SignCmd {
 	#[structopt(long)]
 	hex: bool,
 
-	// #[allow(missing_docs)]
-	// #[structopt(flatten)]
-	// pub keystore_params: KeystoreParams,
+	#[allow(missing_docs)]
+	#[structopt(flatten)]
+	pub keystore_params: KeystoreParams,
 
 	#[allow(missing_docs)]
 	#[structopt(flatten)]

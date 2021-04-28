@@ -14,10 +14,12 @@ dependencies = [
 name = "ac-cli"
 version = "0.1.0"
 dependencies = [
+ "ac-keystore",
  "ac-network",
  "ac-service",
  "ap-core",
  "ap-keystore",
+ "ap-runtime",
  "chrono",
  "fdlimit",
  "futures 0.3.14",
@@ -35,7 +37,6 @@ dependencies = [
  "serde_json",
  "sp-keyring",
  "sp-panic-handler",
- "sp-runtime",
  "sp-utils",
  "sp-version",
  "structopt",
@@ -43,6 +44,25 @@ dependencies = [
  "thiserror",
  "tiny-bip39",
  "tokio 0.2.25",
+]
+
+[[package]]
+name = "ac-keystore"
+version = "0.1.0"
+dependencies = [
+ "ap-application-crypto",
+ "ap-core",
+ "ap-keystore",
+ "async-trait",
+ "derive_more",
+ "futures 0.3.14",
+ "futures-util",
+ "hex",
+ "merlin",
+ "parking_lot 0.11.1",
+ "rand 0.7.3",
+ "serde_json",
+ "subtle 2.4.0",
 ]
 
 [[package]]
@@ -351,6 +371,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "28b2cd92db5cbd74e8e5028f7e27dd7aa3090e89e4f2a197cc7c8dfb69c7063b"
 
 [[package]]
+name = "ap-application-crypto"
+version = "0.1.0"
+dependencies = [
+ "ap-core",
+ "ap-io",
+ "parity-scale-codec",
+ "serde",
+ "sp-std",
+]
+
+[[package]]
 name = "ap-core"
 version = "0.1.0"
 dependencies = [
@@ -394,6 +425,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "ap-io"
+version = "0.1.0"
+dependencies = [
+ "ap-core",
+ "ap-keystore",
+ "futures 0.3.14",
+ "hash-db",
+ "libsecp256k1",
+ "log",
+ "parity-scale-codec",
+ "parking_lot 0.11.1",
+ "sp-externalities",
+ "sp-runtime-interface",
+ "sp-state-machine",
+ "sp-std",
+ "sp-tracing",
+ "sp-trie",
+ "sp-wasm-interface",
+ "tracing",
+ "tracing-core",
+]
+
+[[package]]
 name = "ap-keystore"
 version = "0.1.0"
 dependencies = [
@@ -401,10 +455,32 @@ dependencies = [
  "async-trait",
  "derive_more",
  "futures 0.3.14",
+ "merlin",
  "parity-scale-codec",
  "parking_lot 0.11.1",
+ "schnorrkel",
  "serde",
  "sp-externalities",
+]
+
+[[package]]
+name = "ap-runtime"
+version = "3.0.0"
+dependencies = [
+ "ap-application-crypto",
+ "ap-core",
+ "ap-io",
+ "either",
+ "hash256-std-hasher",
+ "impl-trait-for-tuples",
+ "log",
+ "parity-scale-codec",
+ "parity-util-mem",
+ "paste",
+ "rand 0.7.3",
+ "serde",
+ "sp-arithmetic",
+ "sp-std",
 ]
 
 [[package]]

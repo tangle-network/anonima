@@ -19,14 +19,14 @@
 
 use sp_std::prelude::*;
 use sp_std::{self, marker::PhantomData, convert::{TryFrom, TryInto}, fmt::Debug};
-use sp_io;
+use ap_io;
 #[cfg(feature = "std")]
 use std::fmt::Display;
 #[cfg(feature = "std")]
 use std::str::FromStr;
 #[cfg(feature = "std")]
 use serde::{Serialize, Deserialize, de::DeserializeOwned};
-use sp_core::{self, Hasher, TypeId, RuntimeDebug};
+use ap_core::{self, Hasher, TypeId, RuntimeDebug};
 use crate::codec::{Codec, Encode, Decode};
 use crate::transaction_validity::{
 	ValidTransaction, TransactionSource, TransactionValidity, TransactionValidityError,
@@ -38,7 +38,7 @@ pub use sp_arithmetic::traits::{
 	SaturatedConversion, Zero, One, Bounded, CheckedAdd, CheckedSub, CheckedMul, CheckedDiv,
 	CheckedShl, CheckedShr, IntegerSquareRoot
 };
-use sp_application_crypto::AppKey;
+use ap_application_crypto::AppKey;
 use impl_trait_for_tuples::impl_for_tuples;
 use crate::DispatchResult;
 
@@ -63,17 +63,17 @@ pub trait IdentifyAccount {
 	fn into_account(self) -> Self::AccountId;
 }
 
-impl IdentifyAccount for sp_core::ed25519::Public {
+impl IdentifyAccount for ap_core::ed25519::Public {
 	type AccountId = Self;
 	fn into_account(self) -> Self { self }
 }
 
-impl IdentifyAccount for sp_core::sr25519::Public {
+impl IdentifyAccount for ap_core::sr25519::Public {
 	type AccountId = Self;
 	fn into_account(self) -> Self { self }
 }
 
-impl IdentifyAccount for sp_core::ecdsa::Public {
+impl IdentifyAccount for ap_core::ecdsa::Public {
 	type AccountId = Self;
 	fn into_account(self) -> Self { self }
 }
@@ -88,28 +88,28 @@ pub trait Verify {
 	fn verify<L: Lazy<[u8]>>(&self, msg: L, signer: &<Self::Signer as IdentifyAccount>::AccountId) -> bool;
 }
 
-impl Verify for sp_core::ed25519::Signature {
-	type Signer = sp_core::ed25519::Public;
+impl Verify for ap_core::ed25519::Signature {
+	type Signer = ap_core::ed25519::Public;
 
-	fn verify<L: Lazy<[u8]>>(&self, mut msg: L, signer: &sp_core::ed25519::Public) -> bool {
-		sp_io::crypto::ed25519_verify(self, msg.get(), signer)
+	fn verify<L: Lazy<[u8]>>(&self, mut msg: L, signer: &ap_core::ed25519::Public) -> bool {
+		ap_io::crypto::ed25519_verify(self, msg.get(), signer)
 	}
 }
 
-impl Verify for sp_core::sr25519::Signature {
-	type Signer = sp_core::sr25519::Public;
+impl Verify for ap_core::sr25519::Signature {
+	type Signer = ap_core::sr25519::Public;
 
-	fn verify<L: Lazy<[u8]>>(&self, mut msg: L, signer: &sp_core::sr25519::Public) -> bool {
-		sp_io::crypto::sr25519_verify(self, msg.get(), signer)
+	fn verify<L: Lazy<[u8]>>(&self, mut msg: L, signer: &ap_core::sr25519::Public) -> bool {
+		ap_io::crypto::sr25519_verify(self, msg.get(), signer)
 	}
 }
 
-impl Verify for sp_core::ecdsa::Signature {
-	type Signer = sp_core::ecdsa::Public;
-	fn verify<L: Lazy<[u8]>>(&self, mut msg: L, signer: &sp_core::ecdsa::Public) -> bool {
-		match sp_io::crypto::secp256k1_ecdsa_recover_compressed(
+impl Verify for ap_core::ecdsa::Signature {
+	type Signer = ap_core::ecdsa::Public;
+	fn verify<L: Lazy<[u8]>>(&self, mut msg: L, signer: &ap_core::ecdsa::Public) -> bool {
+		match ap_io::crypto::secp256k1_ecdsa_recover_compressed(
 			self.as_ref(),
-			&sp_io::hashing::blake2_256(msg.get()),
+			&ap_io::hashing::blake2_256(msg.get()),
 		) {
 			Ok(pubkey) => &signer.as_ref()[..] == &pubkey[..],
 			_ => false,
@@ -126,19 +126,19 @@ pub trait AppVerify {
 }
 
 impl<
-	S: Verify<Signer = <<T as AppKey>::Public as sp_application_crypto::AppPublic>::Generic> + From<T>,
-	T: sp_application_crypto::Wraps<Inner=S> + sp_application_crypto::AppKey + sp_application_crypto::AppSignature +
+	S: Verify<Signer = <<T as AppKey>::Public as ap_application_crypto::AppPublic>::Generic> + From<T>,
+	T: ap_application_crypto::Wraps<Inner=S> + ap_application_crypto::AppKey + ap_application_crypto::AppSignature +
 		AsRef<S> + AsMut<S> + From<S>,
 > AppVerify for T where
 	<S as Verify>::Signer: IdentifyAccount<AccountId = <S as Verify>::Signer>,
-	<<T as AppKey>::Public as sp_application_crypto::AppPublic>::Generic:
-		IdentifyAccount<AccountId = <<T as AppKey>::Public as sp_application_crypto::AppPublic>::Generic>,
+	<<T as AppKey>::Public as ap_application_crypto::AppPublic>::Generic:
+		IdentifyAccount<AccountId = <<T as AppKey>::Public as ap_application_crypto::AppPublic>::Generic>,
 {
 	type AccountId = <T as AppKey>::Public;
 	fn verify<L: Lazy<[u8]>>(&self, msg: L, signer: &<T as AppKey>::Public) -> bool {
-		use sp_application_crypto::IsWrappedBy;
+		use ap_application_crypto::IsWrappedBy;
 		let inner: &S = self.as_ref();
-		let inner_pubkey = <<T as AppKey>::Public as sp_application_crypto::AppPublic>::Generic::from_ref(&signer);
+		let inner_pubkey = <<T as AppKey>::Public as ap_application_crypto::AppPublic>::Generic::from_ref(&signer);
 		Verify::verify(inner, msg, inner_pubkey)
 	}
 }
@@ -412,24 +412,24 @@ pub trait Hash: 'static + MaybeSerializeDeserialize + Debug + Clone + Eq + Parti
 pub struct BlakeTwo256;
 
 impl Hasher for BlakeTwo256 {
-	type Out = sp_core::H256;
+	type Out = ap_core::H256;
 	type StdHasher = hash256_std_hasher::Hash256StdHasher;
 	const LENGTH: usize = 32;
 
 	fn hash(s: &[u8]) -> Self::Out {
-		sp_io::hashing::blake2_256(s).into()
+		ap_io::hashing::blake2_256(s).into()
 	}
 }
 
 impl Hash for BlakeTwo256 {
-	type Output = sp_core::H256;
+	type Output = ap_core::H256;
 
 	fn trie_root(input: Vec<(Vec<u8>, Vec<u8>)>) -> Self::Output {
-		sp_io::trie::blake2_256_root(input)
+		ap_io::trie::blake2_256_root(input)
 	}
 
 	fn ordered_trie_root(input: Vec<Vec<u8>>) -> Self::Output {
-		sp_io::trie::blake2_256_ordered_root(input)
+		ap_io::trie::blake2_256_ordered_root(input)
 	}
 }
 
@@ -439,24 +439,24 @@ impl Hash for BlakeTwo256 {
 pub struct Keccak256;
 
 impl Hasher for Keccak256 {
-	type Out = sp_core::H256;
+	type Out = ap_core::H256;
 	type StdHasher = hash256_std_hasher::Hash256StdHasher;
 	const LENGTH: usize = 32;
 
 	fn hash(s: &[u8]) -> Self::Out {
-		sp_io::hashing::keccak_256(s).into()
+		ap_io::hashing::keccak_256(s).into()
 	}
 }
 
 impl Hash for Keccak256 {
-	type Output = sp_core::H256;
+	type Output = ap_core::H256;
 
 	fn trie_root(input: Vec<(Vec<u8>, Vec<u8>)>) -> Self::Output {
-		sp_io::trie::keccak_256_root(input)
+		ap_io::trie::keccak_256_root(input)
 	}
 
 	fn ordered_trie_root(input: Vec<Vec<u8>>) -> Self::Output {
-		sp_io::trie::keccak_256_ordered_root(input)
+		ap_io::trie::keccak_256_ordered_root(input)
 	}
 }
 
@@ -466,10 +466,10 @@ pub trait CheckEqual {
 	fn check_equal(&self, other: &Self);
 }
 
-impl CheckEqual for sp_core::H256 {
+impl CheckEqual for ap_core::H256 {
 	#[cfg(feature = "std")]
 	fn check_equal(&self, other: &Self) {
-		use sp_core::hexdisplay::HexDisplay;
+		use ap_core::hexdisplay::HexDisplay;
 		if self != other {
 			println!(
 				"Hash: given={}, expected={}",
@@ -507,7 +507,7 @@ impl<H: PartialEq + Eq + Debug> CheckEqual for super::generic::DigestItem<H> whe
 	}
 }
 
-sp_core::impl_maybe_marker!(
+ap_core::impl_maybe_marker!(
 	/// A type that implements Display when in std environment.
 	trait MaybeDisplay: Display;
 
@@ -1348,19 +1348,19 @@ impl Printable for usize {
 
 impl Printable for u64 {
 	fn print(&self) {
-		sp_io::misc::print_num(*self);
+		ap_io::misc::print_num(*self);
 	}
 }
 
 impl Printable for &[u8] {
 	fn print(&self) {
-		sp_io::misc::print_hex(self);
+		ap_io::misc::print_hex(self);
 	}
 }
 
 impl Printable for &str {
 	fn print(&self) {
-		sp_io::misc::print_utf8(self.as_bytes());
+		ap_io::misc::print_utf8(self.as_bytes());
 	}
 }
 
@@ -1410,11 +1410,11 @@ pub trait BlockIdTo<Block: self::Block> {
 mod tests {
 	use super::*;
 	use crate::codec::{Encode, Decode, Input};
-	use sp_core::{crypto::Pair, ecdsa};
+	use ap_core::{crypto::Pair, ecdsa};
 
 	mod t {
-		use sp_core::crypto::KeyTypeId;
-		use sp_application_crypto::{app_crypto, sr25519};
+		use ap_core::crypto::KeyTypeId;
+		use ap_application_crypto::{app_crypto, sr25519};
 		app_crypto!(sr25519, KeyTypeId(*b"test"));
 	}
 

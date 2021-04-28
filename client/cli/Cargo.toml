@@ -23,12 +23,12 @@ hex = "0.4.2"
 rand = "0.7.3"
 tiny-bip39 = "0.8.0"
 serde_json = "1.0.41"
-#ac-keystore = { version = "0.1.0", path = "../keystore" }
+ac-keystore = { version = "0.1.0", path = "../keystore" }
 sp-panic-handler = { version = "3.0.0"}
 # sc-client-api = { version = "3.0.0", path = "../api" }
 # sp-blockchain = { version = "3.0.0", path = "../../primitives/blockchain" }
 ac-network = { version = "0.1.0", path = "../network" }
-sp-runtime = { version = "3.0.0"}
+ap-runtime = { version = "3.0.0", path = "../../primitives/runtime" }
 sp-utils = { version = "3.0.0"}
 sp-version = { version = "3.0.0"}
 ap-core = { version = "0.1.0", path = "../../primitives/core" }

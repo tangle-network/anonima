@@ -21,8 +21,8 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 // to allow benchmarking
-#![cfg_attr(feature = "bench", feature(test))]
-#[cfg(feature = "bench")] extern crate test;
+// #![cfg_attr(feature = "bench", feature(test))]
+// #[cfg(feature = "bench")] extern crate test;
 
 #[doc(hidden)]
 pub use codec;
@@ -39,7 +39,7 @@ pub use paste;
 pub use ap_application_crypto as app_crypto;
 
 #[cfg(feature = "std")]
-pub use sp_core::storage::{Storage, StorageChild};
+pub use ap_core::storage::{Storage, StorageChild};
 
 use sp_std::prelude::*;
 use sp_std::convert::TryFrom;
@@ -115,7 +115,7 @@ use crate::traits::IdentifyAccount;
 #[cfg(feature = "std")]
 pub trait BuildStorage {
 	/// Build the storage out of this builder.
-	fn build_storage(&self) -> Result<sp_core::storage::Storage, String> {
+	fn build_storage(&self) -> Result<ap_core::storage::Storage, String> {
 		let mut storage = Default::default();
 		self.assimilate_storage(&mut storage)?;
 		Ok(storage)
@@ -123,7 +123,7 @@ pub trait BuildStorage {
 	/// Assimilate the storage for this module into pre-existing overlays.
 	fn assimilate_storage(
 		&self,
-		storage: &mut sp_core::storage::Storage,
+		storage: &mut ap_core::storage::Storage,
 	) -> Result<(), String>;
 }
 
@@ -133,15 +133,15 @@ pub trait BuildModuleGenesisStorage<T, I>: Sized {
 	/// Create the module genesis storage into the given `storage` and `child_storage`.
 	fn build_module_genesis_storage(
 		&self,
-		storage: &mut sp_core::storage::Storage,
+		storage: &mut ap_core::storage::Storage,
 	) -> Result<(), String>;
 }
 
 #[cfg(feature = "std")]
-impl BuildStorage for sp_core::storage::Storage {
+impl BuildStorage for ap_core::storage::Storage {
 	fn assimilate_storage(
 		&self,
-		storage: &mut sp_core::storage::Storage,
+		storage: &mut ap_core::storage::Storage,
 	)-> Result<(), String> {
 		storage.top.extend(self.top.iter().map(|(k, v)| (k.clone(), v.clone())));
 		for (k, other_map) in self.children_default.iter() {
@@ -163,7 +163,7 @@ impl BuildStorage for sp_core::storage::Storage {
 impl BuildStorage for () {
 	fn assimilate_storage(
 		&self,
-		_: &mut sp_core::storage::Storage,
+		_: &mut ap_core::storage::Storage,
 	) -> Result<(), String> {
 		Err("`assimilate_storage` not implemented for `()`".into())
 	}
@@ -271,7 +271,7 @@ impl traits::IdentifyAccount for MultiSigner {
 		match self {
 			MultiSigner::Ed25519(who) => <[u8; 32]>::from(who).into(),
 			MultiSigner::Sr25519(who) => <[u8; 32]>::from(who).into(),
-			MultiSigner::Ecdsa(who) => sp_io::hashing::blake2_256(&who.as_ref()[..]).into(),
+			MultiSigner::Ecdsa(who) => ap_io::hashing::blake2_256(&who.as_ref()[..]).into(),
 		}
 	}
 }
@@ -333,10 +333,10 @@ impl Verify for MultiSignature {
 			(MultiSignature::Ed25519(ref sig), who) => sig.verify(msg, &ed25519::Public::from_slice(who.as_ref())),
 			(MultiSignature::Sr25519(ref sig), who) => sig.verify(msg, &sr25519::Public::from_slice(who.as_ref())),
 			(MultiSignature::Ecdsa(ref sig), who) => {
-				let m = sp_io::hashing::blake2_256(msg.get());
-				match sp_io::crypto::secp256k1_ecdsa_recover_compressed(sig.as_ref(), &m) {
+				let m = ap_io::hashing::blake2_256(msg.get());
+				match ap_io::crypto::secp256k1_ecdsa_recover_compressed(sig.as_ref(), &m) {
 					Ok(pubkey) =>
-						&sp_io::hashing::blake2_256(pubkey.as_ref())
+						&ap_io::hashing::blake2_256(pubkey.as_ref())
 							== <dyn AsRef<[u8; 32]>>::as_ref(who),
 					_ => false,
 				}
@@ -646,7 +646,7 @@ impl parity_util_mem::MallocSizeOf for OpaqueExtrinsic {
 impl sp_std::fmt::Debug for OpaqueExtrinsic {
 	#[cfg(feature = "std")]
 	fn fmt(&self, fmt: &mut sp_std::fmt::Formatter) -> sp_std::fmt::Result {
-		write!(fmt, "{}", sp_core::hexdisplay::HexDisplay::from(&self.0))
+		write!(fmt, "{}", ap_core::hexdisplay::HexDisplay::from(&self.0))
 	}
 
 	#[cfg(not(feature = "std"))]
@@ -659,14 +659,14 @@ impl sp_std::fmt::Debug for OpaqueExtrinsic {
 #[cfg(feature = "std")]
 impl ::serde::Serialize for OpaqueExtrinsic {
 	fn serialize<S>(&self, seq: S) -> Result<S::Ok, S::Error> where S: ::serde::Serializer {
-		codec::Encode::using_encoded(&self.0, |bytes| ::sp_core::bytes::serialize(bytes, seq))
+		codec::Encode::using_encoded(&self.0, |bytes| ::ap_core::bytes::serialize(bytes, seq))
 	}
 }
 
 #[cfg(feature = "std")]
 impl<'a> ::serde::Deserialize<'a> for OpaqueExtrinsic {
 	fn deserialize<D>(de: D) -> Result<Self, D::Error> where D: ::serde::Deserializer<'a> {
-		let r = ::sp_core::bytes::deserialize(de)?;
+		let r = ::ap_core::bytes::deserialize(de)?;
 		Decode::decode(&mut &r[..])
 			.map_err(|e| ::serde::de::Error::custom(format!("Decode error: {}", e)))
 	}
@@ -693,7 +693,7 @@ pub struct SignatureBatching(bool);
 impl SignatureBatching {
 	/// Start new batching session.
 	pub fn start() -> Self {
-		sp_io::crypto::start_batch_verify();
+		ap_io::crypto::start_batch_verify();
 		SignatureBatching(false)
 	}
 
@@ -701,7 +701,7 @@ impl SignatureBatching {
 	#[must_use]
 	pub fn verify(mut self) -> bool {
 		self.0 = true;
-		sp_io::crypto::finish_batch_verify()
+		ap_io::crypto::finish_batch_verify()
 	}
 }
 
@@ -789,12 +789,12 @@ mod tests {
 	fn batching_still_finishes_when_not_called_directly() {
 		let mut ext = sp_state_machine::BasicExternalities::default();
 		ext.register_extension(
-			sp_core::traits::TaskExecutorExt::new(sp_core::testing::TaskExecutor::new()),
+			ap_core::traits::TaskExecutorExt::new(ap_core::testing::TaskExecutor::new()),
 		);
 
 		ext.execute_with(|| {
 			let _batching = SignatureBatching::start();
-			sp_io::crypto::sr25519_verify(
+			ap_io::crypto::sr25519_verify(
 				&Default::default(),
 				&Vec::new(),
 				&Default::default(),
@@ -807,7 +807,7 @@ mod tests {
 	fn batching_does_not_panic_while_thread_is_already_panicking() {
 		let mut ext = sp_state_machine::BasicExternalities::default();
 		ext.register_extension(
-			sp_core::traits::TaskExecutorExt::new(sp_core::testing::TaskExecutor::new()),
+			ap_core::traits::TaskExecutorExt::new(ap_core::testing::TaskExecutor::new()),
 		);
 
 		ext.execute_with(|| {

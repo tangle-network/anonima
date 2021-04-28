@@ -163,7 +163,7 @@ impl NetworkParams {
 
 		let public_addresses = self.public_addr.clone();
 
-		// let mut boot_nodes = chain_spec.boot_nodes().to_vec();
+		let mut boot_nodes = Vec::new();
 		// boot_nodes.extend(self.bootnodes.clone());
 
 		// let chain_type = chain_spec.chain_type();

@@ -306,7 +306,7 @@ impl CliConfiguration for RunCmd {
 
 	fn dev_key_seed(&self, is_dev: bool) -> Result<Option<String>> {
 		Ok(self.get_keyring().map(|a| format!("//{}", a)).or_else(|| {
-			if is_dev && !self.light {
+			if is_dev {
 				Some("//Alice".into())
 			} else {
 				None
@@ -332,8 +332,8 @@ impl CliConfiguration for RunCmd {
 
 	fn role(&self, is_dev: bool) -> Result<Role> {
 		let keyring = self.get_keyring();
-		let is_light = self.light;
-		let is_authority = (self.validator || is_dev || keyring.is_some()) && !is_light;
+		let is_light = true;
+		let is_authority = (is_dev || keyring.is_some()) && !is_light;
 
 		Ok(if is_light {
 			ac_service::Role::Light
@@ -368,10 +368,6 @@ impl CliConfiguration for RunCmd {
 		})
 	}
 
-	fn disable_grandpa(&self) -> Result<bool> {
-		Ok(self.no_grandpa)
-	}
-
 	fn rpc_ws_max_connections(&self) -> Result<Option<usize>> {
 		Ok(self.ws_max_connections)
 	}
@@ -390,7 +386,6 @@ impl CliConfiguration for RunCmd {
 						"http://127.0.0.1:*".into(),
 						"https://localhost:*".into(),
 						"https://127.0.0.1:*".into(),
-						"https://polkadot.js.org".into(),
 					])
 				}
 			})
@@ -402,7 +397,7 @@ impl CliConfiguration for RunCmd {
 			self.rpc_external,
 			self.unsafe_rpc_external,
 			self.rpc_methods,
-			self.validator
+			false
 		)?;
 
 		Ok(Some(SocketAddr::new(interface, self.rpc_port.unwrap_or(default_listen_port))))
@@ -417,7 +412,7 @@ impl CliConfiguration for RunCmd {
 			self.ws_external,
 			self.unsafe_ws_external,
 			self.rpc_methods,
-			self.validator,
+			false,
 		)?;
 
 		Ok(Some(SocketAddr::new(interface, self.ws_port.unwrap_or(default_listen_port))))

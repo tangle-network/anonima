@@ -776,29 +776,29 @@ pub enum OffchainOverlayedChange {
 	SetValue(Vec<u8>),
 }
 
-#[cfg(test)]
-mod tests {
-	use super::*;
+// #[cfg(test)]
+// mod tests {
+// 	use super::*;
 
-	#[test]
-	fn timestamp_ops() {
-		let t = Timestamp(5);
-		assert_eq!(t.add(Duration::from_millis(10)), Timestamp(15));
-		assert_eq!(t.sub(Duration::from_millis(10)), Timestamp(0));
-		assert_eq!(t.diff(&Timestamp(3)), Duration(2));
-	}
+// 	#[test]
+// 	fn timestamp_ops() {
+// 		let t = Timestamp(5);
+// 		assert_eq!(t.add(Duration::from_millis(10)), Timestamp(15));
+// 		assert_eq!(t.sub(Duration::from_millis(10)), Timestamp(0));
+// 		assert_eq!(t.diff(&Timestamp(3)), Duration(2));
+// 	}
 
-	#[test]
-	fn capabilities() {
-		let none = Capabilities::none();
-		let all = Capabilities::all();
-		let some = Capabilities::from(&[Capability::Keystore, Capability::Randomness][..]);
+// 	#[test]
+// 	fn capabilities() {
+// 		let none = Capabilities::none();
+// 		let all = Capabilities::all();
+// 		let some = Capabilities::from(&[Capability::Keystore, Capability::Randomness][..]);
 
-		assert!(!none.has(Capability::Keystore));
-		assert!(all.has(Capability::Keystore));
-		assert!(some.has(Capability::Keystore));
-		assert!(!none.has(Capability::TransactionPool));
-		assert!(all.has(Capability::TransactionPool));
-		assert!(!some.has(Capability::TransactionPool));
-	}
-}
+// 		assert!(!none.has(Capability::Keystore));
+// 		assert!(all.has(Capability::Keystore));
+// 		assert!(some.has(Capability::Keystore));
+// 		assert!(!none.has(Capability::TransactionPool));
+// 		assert!(all.has(Capability::TransactionPool));
+// 		assert!(!some.has(Capability::TransactionPool));
+// 	}
+// }

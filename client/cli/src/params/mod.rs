@@ -17,7 +17,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 // mod database_params;
 // mod import_params;
-// mod keystore_params;
+mod keystore_params;
 mod network_params;
 mod node_key_params;
 // mod offchain_worker_params;
