@@ -1,6 +1,3 @@
 {
-    "git.ignoreLimitWarning": true,
-    "rust-analyzer.lens.methodReferences": true,
-    "rust-analyzer.lens.references": true,
-    "rust-analyzer.cargo.allFeatures": true
+    "git.ignoreLimitWarning": true
 }

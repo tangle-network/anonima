@@ -18,7 +18,7 @@
 //! Generic implementation of an unchecked (pre-verification) extrinsic.
 
 use sp_std::{fmt, prelude::*};
-use sp_io::hashing::blake2_256;
+use ap_io::hashing::blake2_256;
 use codec::{Decode, Encode, EncodeLike, Input, Error};
 use crate::{
 	traits::{
@@ -295,7 +295,7 @@ impl<'a, Address: Decode, Signature: Decode, Call: Decode, Extra: SignedExtensio
 	fn deserialize<D>(de: D) -> Result<Self, D::Error> where
 		D: serde::Deserializer<'a>,
 	{
-		let r = sp_core::bytes::deserialize(de)?;
+		let r = ap_core::bytes::deserialize(de)?;
 		Decode::decode(&mut &r[..])
 			.map_err(|e| serde::de::Error::custom(format!("Decode error: {}", e)))
 	}
@@ -338,7 +338,7 @@ where
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use sp_io::hashing::blake2_256;
+	use ap_io::hashing::blake2_256;
 	use crate::codec::{Encode, Decode};
 	use crate::traits::{SignedExtension, IdentityLookup};
 	use crate::testing::TestSignature as TestSig;

@@ -43,7 +43,7 @@ use prost::Message as _;
 // 	block_validation::BlockAnnounceValidator,
 // 	import_queue::{BlockImportResult, BlockImportError, IncomingBlock, Origin}
 // };
-use sp_runtime::{
+use ap_runtime::{
 	Justification,
 	generic::BlockId,
 	traits::{Block as BlockT, Header as HeaderT, NumberFor, Zero, CheckedSub},
@@ -1542,4 +1542,12 @@ impl NetworkBehaviour for Protocol {
 	fn inject_listener_closed(&mut self, id: ListenerId, reason: Result<(), &io::Error>) {
 		self.behaviour.inject_listener_closed(id, reason);
 	}
+
+	fn inject_address_change(
+        &mut self,
+        _: &PeerId,
+        _: &ConnectionId,
+        _old: &ConnectedPoint,
+        _new: &ConnectedPoint
+    ) {}
 }

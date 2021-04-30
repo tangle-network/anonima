@@ -1,4 +1,3 @@
 {
-    "git.ignoreLimitWarning": true,
-    "rust-analyzer.cargo.allFeatures": true
+    "git.ignoreLimitWarning": true
 }

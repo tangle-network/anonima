@@ -40,7 +40,7 @@ use log::{trace, debug, warn};
 use prometheus_endpoint::{
 	Registry, Counter, PrometheusError, register, U64
 };
-use sp_runtime::traits::Block as BlockT;
+use ap_runtime::traits::Block as BlockT;
 use std::borrow::Cow;
 use std::collections::{HashMap, hash_map::Entry};
 use std::sync::{atomic::{AtomicBool, Ordering}, Arc};

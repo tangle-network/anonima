@@ -39,7 +39,7 @@ use tracing;
 use ap_core::{
 	crypto::Pair,
 	traits::{CallInWasmExt, TaskExecutorExt, RuntimeSpawnExt},
-	// offchain::{OffchainExt, TransactionPoolExt},
+	offchain::{OffchainExt, TransactionPoolExt},
 	hexdisplay::HexDisplay,
 	storage::ChildInfo,
 };
@@ -54,7 +54,7 @@ use ap_core::{
 };
 
 #[cfg(feature = "std")]
-use sp_trie::{TrieConfiguration, trie_types::Layout};
+use ap_trie::{TrieConfiguration, trie_types::Layout};
 
 use sp_runtime_interface::{runtime_interface, Pointer};
 use sp_runtime_interface::pass_by::PassBy;
@@ -405,36 +405,36 @@ pub trait Misc {
 		log::debug!(target: "runtime", "{}", HexDisplay::from(&data));
 	}
 
-	/// Extract the runtime version of the given wasm blob by calling `Core_version`.
-	///
-	/// Returns `None` if calling the function failed for any reason or `Some(Vec<u8>)` where
-	/// the `Vec<u8>` holds the SCALE encoded runtime version.
-	///
-	/// # Performance
-	///
-	/// Calling this function is very expensive and should only be done very occasionally.
-	/// For getting the runtime version, it requires instantiating the wasm blob and calling a
-	/// function in this blob.
-	fn runtime_version(&mut self, wasm: &[u8]) -> Option<Vec<u8>> {
-		// Create some dummy externalities, `Core_version` should not write data anyway.
-		let mut ext = sp_state_machine::BasicExternalities::default();
+	// / Extract the runtime version of the given wasm blob by calling `Core_version`.
+	// /
+	// / Returns `None` if calling the function failed for any reason or `Some(Vec<u8>)` where
+	// / the `Vec<u8>` holds the SCALE encoded runtime version.
+	// /
+	// / # Performance
+	// /
+	// / Calling this function is very expensive and should only be done very occasionally.
+	// / For getting the runtime version, it requires instantiating the wasm blob and calling a
+	// / function in this blob.
+	// fn runtime_version(&mut self, wasm: &[u8]) -> Option<Vec<u8>> {
+	// 	// Create some dummy externalities, `Core_version` should not write data anyway.
+	// 	let mut ext = sp_state_machine::BasicExternalities::default();
 
-		self.extension::<CallInWasmExt>()
-			.expect("No `CallInWasmExt` associated for the current context!")
-			.call_in_wasm(
-				wasm,
-				None,
-				"Core_version",
-				&[],
-				&mut ext,
-				// If a runtime upgrade introduces new host functions that are not provided by
-				// the node, we should not fail at instantiation. Otherwise nodes that are
-				// updated could run this successfully and it could lead to a storage root
-				// mismatch when importing this block.
-				ap_core::traits::MissingHostFunctions::Allow,
-			)
-			.ok()
-	}
+	// 	self.extension::<CallInWasmExt>()
+	// 		.expect("No `CallInWasmExt` associated for the current context!")
+	// 		.call_in_wasm(
+	// 			wasm,
+	// 			None,
+	// 			"Core_version",
+	// 			&[],
+	// 			&mut ext,
+	// 			// If a runtime upgrade introduces new host functions that are not provided by
+	// 			// the node, we should not fail at instantiation. Otherwise nodes that are
+	// 			// updated could run this successfully and it could lead to a storage root
+	// 			// mismatch when importing this block.
+	// 			ap_core::traits::MissingHostFunctions::Allow,
+	// 		)
+	// 		.ok()
+	// }
 }
 
 /// Interfaces for working with crypto related types from within the runtime.
@@ -786,212 +786,212 @@ sp_externalities::decl_extension! {
 	pub struct VerificationExt(BatchVerifier);
 }
 
-// / Interface that provides functions to access the offchain functionality.
-// /
-// / These functions are being made available to the runtime and are called by the runtime.
-// #[runtime_interface]
-// pub trait Offchain {
-// 	/// Returns if the local node is a potential validator.
-// 	///
-// 	/// Even if this function returns `true`, it does not mean that any keys are configured
-// 	/// and that the validator is registered in the chain.
-// 	fn is_validator(&mut self) -> bool {
-// 		self.extension::<OffchainExt>()
-// 			.expect("is_validator can be called only in the offchain worker context")
-// 			.is_validator()
-// 	}
+/// Interface that provides functions to access the offchain functionality.
+///
+/// These functions are being made available to the runtime and are called by the runtime.
+#[runtime_interface]
+pub trait Offchain {
+	/// Returns if the local node is a potential validator.
+	///
+	/// Even if this function returns `true`, it does not mean that any keys are configured
+	/// and that the validator is registered in the chain.
+	fn is_validator(&mut self) -> bool {
+		self.extension::<OffchainExt>()
+			.expect("is_validator can be called only in the offchain worker context")
+			.is_validator()
+	}
 
-// 	/// Submit an encoded transaction to the pool.
-// 	///
-// 	/// The transaction will end up in the pool.
-// 	fn submit_transaction(&mut self, data: Vec<u8>) -> Result<(), ()> {
-// 		self.extension::<TransactionPoolExt>()
-// 			.expect("submit_transaction can be called only in the offchain call context with
-// 				TransactionPool capabilities enabled")
-// 			.submit_transaction(data)
-// 	}
+	/// Submit an encoded transaction to the pool.
+	///
+	/// The transaction will end up in the pool.
+	fn submit_transaction(&mut self, data: Vec<u8>) -> Result<(), ()> {
+		self.extension::<TransactionPoolExt>()
+			.expect("submit_transaction can be called only in the offchain call context with
+				TransactionPool capabilities enabled")
+			.submit_transaction(data)
+	}
 
-// 	/// Returns information about the local node's network state.
-// 	fn network_state(&mut self) -> Result<OpaqueNetworkState, ()> {
-// 		self.extension::<OffchainExt>()
-// 			.expect("network_state can be called only in the offchain worker context")
-// 			.network_state()
-// 	}
+	/// Returns information about the local node's network state.
+	fn network_state(&mut self) -> Result<OpaqueNetworkState, ()> {
+		self.extension::<OffchainExt>()
+			.expect("network_state can be called only in the offchain worker context")
+			.network_state()
+	}
 
-// 	/// Returns current UNIX timestamp (in millis)
-// 	fn timestamp(&mut self) -> Timestamp {
-// 		self.extension::<OffchainExt>()
-// 			.expect("timestamp can be called only in the offchain worker context")
-// 			.timestamp()
-// 	}
+	/// Returns current UNIX timestamp (in millis)
+	fn timestamp(&mut self) -> Timestamp {
+		self.extension::<OffchainExt>()
+			.expect("timestamp can be called only in the offchain worker context")
+			.timestamp()
+	}
 
-// 	/// Pause the execution until `deadline` is reached.
-// 	fn sleep_until(&mut self, deadline: Timestamp) {
-// 		self.extension::<OffchainExt>()
-// 			.expect("sleep_until can be called only in the offchain worker context")
-// 			.sleep_until(deadline)
-// 	}
+	/// Pause the execution until `deadline` is reached.
+	fn sleep_until(&mut self, deadline: Timestamp) {
+		self.extension::<OffchainExt>()
+			.expect("sleep_until can be called only in the offchain worker context")
+			.sleep_until(deadline)
+	}
 
-// 	/// Returns a random seed.
-// 	///
-// 	/// This is a truly random, non-deterministic seed generated by host environment.
-// 	/// Obviously fine in the off-chain worker context.
-// 	fn random_seed(&mut self) -> [u8; 32] {
-// 		self.extension::<OffchainExt>()
-// 			.expect("random_seed can be called only in the offchain worker context")
-// 			.random_seed()
-// 	}
+	/// Returns a random seed.
+	///
+	/// This is a truly random, non-deterministic seed generated by host environment.
+	/// Obviously fine in the off-chain worker context.
+	fn random_seed(&mut self) -> [u8; 32] {
+		self.extension::<OffchainExt>()
+			.expect("random_seed can be called only in the offchain worker context")
+			.random_seed()
+	}
 
-// 	/// Sets a value in the local storage.
-// 	///
-// 	/// Note this storage is not part of the consensus, it's only accessible by
-// 	/// offchain worker tasks running on the same machine. It IS persisted between runs.
-// 	fn local_storage_set(&mut self, kind: StorageKind, key: &[u8], value: &[u8]) {
-// 		self.extension::<OffchainExt>()
-// 			.expect("local_storage_set can be called only in the offchain worker context")
-// 			.local_storage_set(kind, key, value)
-// 	}
+	/// Sets a value in the local storage.
+	///
+	/// Note this storage is not part of the consensus, it's only accessible by
+	/// offchain worker tasks running on the same machine. It IS persisted between runs.
+	fn local_storage_set(&mut self, kind: StorageKind, key: &[u8], value: &[u8]) {
+		self.extension::<OffchainExt>()
+			.expect("local_storage_set can be called only in the offchain worker context")
+			.local_storage_set(kind, key, value)
+	}
 
-// 	/// Remove a value from the local storage.
-// 	///
-// 	/// Note this storage is not part of the consensus, it's only accessible by
-// 	/// offchain worker tasks running on the same machine. It IS persisted between runs.
-// 	fn local_storage_clear(&mut self, kind: StorageKind, key: &[u8]) {
-// 		self.extension::<OffchainExt>()
-// 			.expect("local_storage_clear can be called only in the offchain worker context")
-// 			.local_storage_clear(kind, key)
-// 	}
+	/// Remove a value from the local storage.
+	///
+	/// Note this storage is not part of the consensus, it's only accessible by
+	/// offchain worker tasks running on the same machine. It IS persisted between runs.
+	fn local_storage_clear(&mut self, kind: StorageKind, key: &[u8]) {
+		self.extension::<OffchainExt>()
+			.expect("local_storage_clear can be called only in the offchain worker context")
+			.local_storage_clear(kind, key)
+	}
 
-// 	/// Sets a value in the local storage if it matches current value.
-// 	///
-// 	/// Since multiple offchain workers may be running concurrently, to prevent
-// 	/// data races use CAS to coordinate between them.
-// 	///
-// 	/// Returns `true` if the value has been set, `false` otherwise.
-// 	///
-// 	/// Note this storage is not part of the consensus, it's only accessible by
-// 	/// offchain worker tasks running on the same machine. It IS persisted between runs.
-// 	fn local_storage_compare_and_set(
-// 		&mut self,
-// 		kind: StorageKind,
-// 		key: &[u8],
-// 		old_value: Option<Vec<u8>>,
-// 		new_value: &[u8],
-// 	) -> bool {
-// 		self.extension::<OffchainExt>()
-// 			.expect("local_storage_compare_and_set can be called only in the offchain worker context")
-// 			.local_storage_compare_and_set(kind, key, old_value.as_ref().map(|v| v.deref()), new_value)
-// 	}
+	/// Sets a value in the local storage if it matches current value.
+	///
+	/// Since multiple offchain workers may be running concurrently, to prevent
+	/// data races use CAS to coordinate between them.
+	///
+	/// Returns `true` if the value has been set, `false` otherwise.
+	///
+	/// Note this storage is not part of the consensus, it's only accessible by
+	/// offchain worker tasks running on the same machine. It IS persisted between runs.
+	fn local_storage_compare_and_set(
+		&mut self,
+		kind: StorageKind,
+		key: &[u8],
+		old_value: Option<Vec<u8>>,
+		new_value: &[u8],
+	) -> bool {
+		self.extension::<OffchainExt>()
+			.expect("local_storage_compare_and_set can be called only in the offchain worker context")
+			.local_storage_compare_and_set(kind, key, old_value.as_ref().map(|v| v.deref()), new_value)
+	}
 
-// 	/// Gets a value from the local storage.
-// 	///
-// 	/// If the value does not exist in the storage `None` will be returned.
-// 	/// Note this storage is not part of the consensus, it's only accessible by
-// 	/// offchain worker tasks running on the same machine. It IS persisted between runs.
-// 	fn local_storage_get(&mut self, kind: StorageKind, key: &[u8]) -> Option<Vec<u8>> {
-// 		self.extension::<OffchainExt>()
-// 			.expect("local_storage_get can be called only in the offchain worker context")
-// 			.local_storage_get(kind, key)
-// 	}
+	/// Gets a value from the local storage.
+	///
+	/// If the value does not exist in the storage `None` will be returned.
+	/// Note this storage is not part of the consensus, it's only accessible by
+	/// offchain worker tasks running on the same machine. It IS persisted between runs.
+	fn local_storage_get(&mut self, kind: StorageKind, key: &[u8]) -> Option<Vec<u8>> {
+		self.extension::<OffchainExt>()
+			.expect("local_storage_get can be called only in the offchain worker context")
+			.local_storage_get(kind, key)
+	}
 
-// 	/// Initiates a http request given HTTP verb and the URL.
-// 	///
-// 	/// Meta is a future-reserved field containing additional, parity-scale-codec encoded parameters.
-// 	/// Returns the id of newly started request.
-// 	fn http_request_start(
-// 		&mut self,
-// 		method: &str,
-// 		uri: &str,
-// 		meta: &[u8],
-// 	) -> Result<HttpRequestId, ()> {
-// 		self.extension::<OffchainExt>()
-// 			.expect("http_request_start can be called only in the offchain worker context")
-// 			.http_request_start(method, uri, meta)
-// 	}
+	/// Initiates a http request given HTTP verb and the URL.
+	///
+	/// Meta is a future-reserved field containing additional, parity-scale-codec encoded parameters.
+	/// Returns the id of newly started request.
+	fn http_request_start(
+		&mut self,
+		method: &str,
+		uri: &str,
+		meta: &[u8],
+	) -> Result<HttpRequestId, ()> {
+		self.extension::<OffchainExt>()
+			.expect("http_request_start can be called only in the offchain worker context")
+			.http_request_start(method, uri, meta)
+	}
 
-// 	/// Append header to the request.
-// 	fn http_request_add_header(
-// 		&mut self,
-// 		request_id: HttpRequestId,
-// 		name: &str,
-// 		value: &str,
-// 	) -> Result<(), ()> {
-// 		self.extension::<OffchainExt>()
-// 			.expect("http_request_add_header can be called only in the offchain worker context")
-// 			.http_request_add_header(request_id, name, value)
-// 	}
+	/// Append header to the request.
+	fn http_request_add_header(
+		&mut self,
+		request_id: HttpRequestId,
+		name: &str,
+		value: &str,
+	) -> Result<(), ()> {
+		self.extension::<OffchainExt>()
+			.expect("http_request_add_header can be called only in the offchain worker context")
+			.http_request_add_header(request_id, name, value)
+	}
 
-// 	/// Write a chunk of request body.
-// 	///
-// 	/// Writing an empty chunks finalizes the request.
-// 	/// Passing `None` as deadline blocks forever.
-// 	///
-// 	/// Returns an error in case deadline is reached or the chunk couldn't be written.
-// 	fn http_request_write_body(
-// 		&mut self,
-// 		request_id: HttpRequestId,
-// 		chunk: &[u8],
-// 		deadline: Option<Timestamp>,
-// 	) -> Result<(), HttpError> {
-// 		self.extension::<OffchainExt>()
-// 			.expect("http_request_write_body can be called only in the offchain worker context")
-// 			.http_request_write_body(request_id, chunk, deadline)
-// 	}
+	/// Write a chunk of request body.
+	///
+	/// Writing an empty chunks finalizes the request.
+	/// Passing `None` as deadline blocks forever.
+	///
+	/// Returns an error in case deadline is reached or the chunk couldn't be written.
+	fn http_request_write_body(
+		&mut self,
+		request_id: HttpRequestId,
+		chunk: &[u8],
+		deadline: Option<Timestamp>,
+	) -> Result<(), HttpError> {
+		self.extension::<OffchainExt>()
+			.expect("http_request_write_body can be called only in the offchain worker context")
+			.http_request_write_body(request_id, chunk, deadline)
+	}
 
-// 	/// Block and wait for the responses for given requests.
-// 	///
-// 	/// Returns a vector of request statuses (the len is the same as ids).
-// 	/// Note that if deadline is not provided the method will block indefinitely,
-// 	/// otherwise unready responses will produce `DeadlineReached` status.
-// 	///
-// 	/// Passing `None` as deadline blocks forever.
-// 	fn http_response_wait(
-// 		&mut self,
-// 		ids: &[HttpRequestId],
-// 		deadline: Option<Timestamp>,
-// 	) -> Vec<HttpRequestStatus> {
-// 		self.extension::<OffchainExt>()
-// 			.expect("http_response_wait can be called only in the offchain worker context")
-// 			.http_response_wait(ids, deadline)
-// 	}
+	/// Block and wait for the responses for given requests.
+	///
+	/// Returns a vector of request statuses (the len is the same as ids).
+	/// Note that if deadline is not provided the method will block indefinitely,
+	/// otherwise unready responses will produce `DeadlineReached` status.
+	///
+	/// Passing `None` as deadline blocks forever.
+	fn http_response_wait(
+		&mut self,
+		ids: &[HttpRequestId],
+		deadline: Option<Timestamp>,
+	) -> Vec<HttpRequestStatus> {
+		self.extension::<OffchainExt>()
+			.expect("http_response_wait can be called only in the offchain worker context")
+			.http_response_wait(ids, deadline)
+	}
 
-// 	/// Read all response headers.
-// 	///
-// 	/// Returns a vector of pairs `(HeaderKey, HeaderValue)`.
-// 	/// NOTE response headers have to be read before response body.
-// 	fn http_response_headers(&mut self, request_id: HttpRequestId) -> Vec<(Vec<u8>, Vec<u8>)> {
-// 		self.extension::<OffchainExt>()
-// 			.expect("http_response_headers can be called only in the offchain worker context")
-// 			.http_response_headers(request_id)
-// 	}
+	/// Read all response headers.
+	///
+	/// Returns a vector of pairs `(HeaderKey, HeaderValue)`.
+	/// NOTE response headers have to be read before response body.
+	fn http_response_headers(&mut self, request_id: HttpRequestId) -> Vec<(Vec<u8>, Vec<u8>)> {
+		self.extension::<OffchainExt>()
+			.expect("http_response_headers can be called only in the offchain worker context")
+			.http_response_headers(request_id)
+	}
 
-// 	/// Read a chunk of body response to given buffer.
-// 	///
-// 	/// Returns the number of bytes written or an error in case a deadline
-// 	/// is reached or server closed the connection.
-// 	/// If `0` is returned it means that the response has been fully consumed
-// 	/// and the `request_id` is now invalid.
-// 	/// NOTE this implies that response headers must be read before draining the body.
-// 	/// Passing `None` as a deadline blocks forever.
-// 	fn http_response_read_body(
-// 		&mut self,
-// 		request_id: HttpRequestId,
-// 		buffer: &mut [u8],
-// 		deadline: Option<Timestamp>,
-// 	) -> Result<u32, HttpError> {
-// 		self.extension::<OffchainExt>()
-// 			.expect("http_response_read_body can be called only in the offchain worker context")
-// 			.http_response_read_body(request_id, buffer, deadline)
-// 			.map(|r| r as u32)
-// 	}
+	/// Read a chunk of body response to given buffer.
+	///
+	/// Returns the number of bytes written or an error in case a deadline
+	/// is reached or server closed the connection.
+	/// If `0` is returned it means that the response has been fully consumed
+	/// and the `request_id` is now invalid.
+	/// NOTE this implies that response headers must be read before draining the body.
+	/// Passing `None` as a deadline blocks forever.
+	fn http_response_read_body(
+		&mut self,
+		request_id: HttpRequestId,
+		buffer: &mut [u8],
+		deadline: Option<Timestamp>,
+	) -> Result<u32, HttpError> {
+		self.extension::<OffchainExt>()
+			.expect("http_response_read_body can be called only in the offchain worker context")
+			.http_response_read_body(request_id, buffer, deadline)
+			.map(|r| r as u32)
+	}
 
-// 	/// Set the authorized nodes and authorized_only flag.
-// 	fn set_authorized_nodes(&mut self, nodes: Vec<OpaquePeerId>, authorized_only: bool) {
-// 		self.extension::<OffchainExt>()
-// 			.expect("set_authorized_nodes can be called only in the offchain worker context")
-// 			.set_authorized_nodes(nodes, authorized_only)
-// 	}
-// }
+	/// Set the authorized nodes and authorized_only flag.
+	fn set_authorized_nodes(&mut self, nodes: Vec<OpaquePeerId>, authorized_only: bool) {
+		self.extension::<OffchainExt>()
+			.expect("set_authorized_nodes can be called only in the offchain worker context")
+			.set_authorized_nodes(nodes, authorized_only)
+	}
+}
 
 /// Wasm only interface that provides functions for calling into the allocator.
 #[runtime_interface(wasm_only)]
@@ -1342,7 +1342,7 @@ pub fn oom(_: core::alloc::Layout) -> ! {
 
 /// Type alias for Externalities implementation used in tests.
 #[cfg(feature = "std")]
-pub type TestExternalities = sp_state_machine::TestExternalities<ap_core::Blake2Hasher, u64>;
+pub type TestExternalities = ap_state_machine::TestExternalities<ap_core::Blake2Hasher, u64>;
 
 /// The host functions Substrate provides for the Wasm runtime environment.
 ///
@@ -1353,7 +1353,7 @@ pub type SubstrateHostFunctions = (
 	default_child_storage::HostFunctions,
 	misc::HostFunctions,
 	wasm_tracing::HostFunctions,
-	// offchain::HostFunctions,
+	offchain::HostFunctions,
 	crypto::HostFunctions,
 	hashing::HostFunctions,
 	allocator::HostFunctions,
@@ -1364,206 +1364,207 @@ pub type SubstrateHostFunctions = (
 	runtime_tasks::HostFunctions,
 );
 
-// #[cfg(test)]
-// mod tests {
-// 	use super::*;
-// 	use sp_state_machine::BasicExternalities;
-// 	use ap_core::{
-// 		storage::Storage, map, traits::TaskExecutorExt, testing::TaskExecutor,
-// 	};
-// 	use std::any::TypeId;
+#[cfg(test)]
+mod tests {
+	use super::*;
+	// use sp_state_machine::BasicExternalities;
+	use ap_core::{
+		storage::Storage, map, traits::TaskExecutorExt, testing::TaskExecutor,
+	};
+	use std::any::TypeId;
 
-// 	#[test]
-// 	fn storage_works() {
-// 		let mut t = BasicExternalities::default();
-// 		t.execute_with(|| {
-// 			assert_eq!(storage::get(b"hello"), None);
-// 			storage::set(b"hello", b"world");
-// 			assert_eq!(storage::get(b"hello"), Some(b"world".to_vec()));
-// 			assert_eq!(storage::get(b"foo"), None);
-// 			storage::set(b"foo", &[1, 2, 3][..]);
-// 		});
+	// #[test]
+	// fn storage_works() {
+	// 	let mut t = BasicExternalities::default();
+	// 	t.execute_with(|| {
+	// 		assert_eq!(storage::get(b"hello"), None);
+	// 		storage::set(b"hello", b"world");
+	// 		assert_eq!(storage::get(b"hello"), Some(b"world".to_vec()));
+	// 		assert_eq!(storage::get(b"foo"), None);
+	// 		storage::set(b"foo", &[1, 2, 3][..]);
+	// 	});
 
-// 		t = BasicExternalities::new(Storage {
-// 			top: map![b"foo".to_vec() => b"bar".to_vec()],
-// 			children_default: map![],
-// 		});
+	// 	t = BasicExternalities::new(Storage {
+	// 		top: map![b"foo".to_vec() => b"bar".to_vec()],
+	// 		children_default: map![],
+	// 	});
 
-// 		t.execute_with(|| {
-// 			assert_eq!(storage::get(b"hello"), None);
-// 			assert_eq!(storage::get(b"foo"), Some(b"bar".to_vec()));
-// 		});
-// 	}
+	// 	t.execute_with(|| {
+	// 		assert_eq!(storage::get(b"hello"), None);
+	// 		assert_eq!(storage::get(b"foo"), Some(b"bar".to_vec()));
+	// 	});
+	// }
 
-// 	#[test]
-// 	fn read_storage_works() {
-// 		let value = b"\x0b\0\0\0Hello world".to_vec();
-// 		let mut t = BasicExternalities::new(Storage {
-// 			top: map![b":test".to_vec() => value.clone()],
-// 			children_default: map![],
-// 		});
+	// #[test]
+	// fn read_storage_works() {
+	// 	let value = b"\x0b\0\0\0Hello world".to_vec();
+	// 	let mut t = BasicExternalities::new(Storage {
+	// 		top: map![b":test".to_vec() => value.clone()],
+	// 		children_default: map![],
+	// 	});
 
-// 		t.execute_with(|| {
-// 			let mut v = [0u8; 4];
-// 			assert_eq!(storage::read(b":test", &mut v[..], 0).unwrap(), value.len() as u32);
-// 			assert_eq!(v, [11u8, 0, 0, 0]);
-// 			let mut w = [0u8; 11];
-// 			assert_eq!(storage::read(b":test", &mut w[..], 4).unwrap(), value.len() as u32 - 4);
-// 			assert_eq!(&w, b"Hello world");
-// 		});
-// 	}
+	// 	t.execute_with(|| {
+	// 		let mut v = [0u8; 4];
+	// 		assert_eq!(storage::read(b":test", &mut v[..], 0).unwrap(), value.len() as u32);
+	// 		assert_eq!(v, [11u8, 0, 0, 0]);
+	// 		let mut w = [0u8; 11];
+	// 		assert_eq!(storage::read(b":test", &mut w[..], 4).unwrap(), value.len() as u32 - 4);
+	// 		assert_eq!(&w, b"Hello world");
+	// 	});
+	// }
 
-// 	#[test]
-// 	fn clear_prefix_works() {
-// 		let mut t = BasicExternalities::new(Storage {
-// 			top: map![
-// 				b":a".to_vec() => b"\x0b\0\0\0Hello world".to_vec(),
-// 				b":abcd".to_vec() => b"\x0b\0\0\0Hello world".to_vec(),
-// 				b":abc".to_vec() => b"\x0b\0\0\0Hello world".to_vec(),
-// 				b":abdd".to_vec() => b"\x0b\0\0\0Hello world".to_vec()
-// 			],
-// 			children_default: map![],
-// 		});
+	// #[test]
+	// fn clear_prefix_works() {
+	// 	let mut t = BasicExternalities::new(Storage {
+	// 		top: map![
+	// 			b":a".to_vec() => b"\x0b\0\0\0Hello world".to_vec(),
+	// 			b":abcd".to_vec() => b"\x0b\0\0\0Hello world".to_vec(),
+	// 			b":abc".to_vec() => b"\x0b\0\0\0Hello world".to_vec(),
+	// 			b":abdd".to_vec() => b"\x0b\0\0\0Hello world".to_vec()
+	// 		],
+	// 		children_default: map![],
+	// 	});
 
-// 		t.execute_with(|| {
-// 			storage::clear_prefix(b":abc");
+	// 	t.execute_with(|| {
+	// 		storage::clear_prefix(b":abc");
 
-// 			assert!(storage::get(b":a").is_some());
-// 			assert!(storage::get(b":abdd").is_some());
-// 			assert!(storage::get(b":abcd").is_none());
-// 			assert!(storage::get(b":abc").is_none());
-// 		});
-// 	}
+	// 		assert!(storage::get(b":a").is_some());
+	// 		assert!(storage::get(b":abdd").is_some());
+	// 		assert!(storage::get(b":abcd").is_none());
+	// 		assert!(storage::get(b":abc").is_none());
+	// 	});
+	// }
 
-// 	#[test]
-// 	fn batch_verify_start_finish_works() {
-// 		let mut ext = BasicExternalities::default();
-// 		ext.register_extension(TaskExecutorExt::new(TaskExecutor::new()));
+	// #[test]
+	// fn batch_verify_start_finish_works() {
+	// 	let mut ext = BasicExternalities::default();
+	// 	ext.register_extension(TaskExecutorExt::new(TaskExecutor::new()));
 
-// 		ext.execute_with(|| {
-// 			crypto::start_batch_verify();
-// 		});
+	// 	ext.execute_with(|| {
+	// 		crypto::start_batch_verify();
+	// 	});
 
-// 		assert!(ext.extensions().get_mut(TypeId::of::<VerificationExt>()).is_some());
+	// 	assert!(ext.extensions().get_mut(TypeId::of::<VerificationExt>()).is_some());
 
-// 		ext.execute_with(|| {
-// 			assert!(crypto::finish_batch_verify());
-// 		});
+	// 	ext.execute_with(|| {
+	// 		assert!(crypto::finish_batch_verify());
+	// 	});
 
-// 		assert!(ext.extensions().get_mut(TypeId::of::<VerificationExt>()).is_none());
-// 	}
+	// 	assert!(ext.extensions().get_mut(TypeId::of::<VerificationExt>()).is_none());
+	// }
 
-// 	#[test]
-// 	fn long_sr25519_batching() {
-// 		let mut ext = BasicExternalities::default();
-// 		ext.register_extension(TaskExecutorExt::new(TaskExecutor::new()));
-// 		ext.execute_with(|| {
-// 			let pair = sr25519::Pair::generate_with_phrase(None).0;
-// 			crypto::start_batch_verify();
-// 			for it in 0..70 {
-// 				let msg = format!("Schnorrkel {}!", it);
-// 				let signature = pair.sign(msg.as_bytes());
-// 				crypto::sr25519_batch_verify(&signature, msg.as_bytes(), &pair.public());
-// 			}
+	// #[test]
+	// fn long_sr25519_batching() {
+	// 	let mut ext = BasicExternalities::default();
+	// 	ext.register_extension(TaskExecutorExt::new(TaskExecutor::new()));
+	// 	ext.execute_with(|| {
+	// 		let pair = sr25519::Pair::generate_with_phrase(None).0;
+	// 		crypto::start_batch_verify();
+	// 		for it in 0..70 {
+	// 			let msg = format!("Schnorrkel {}!", it);
+	// 			let signature = pair.sign(msg.as_bytes());
+	// 			crypto::sr25519_batch_verify(&signature, msg.as_bytes(), &pair.public());
+	// 		}
 
-// 			// push invlaid
-// 			crypto::sr25519_batch_verify(
-// 				&Default::default(),
-// 				&Vec::new(),
-// 				&Default::default(),
-// 			);
-// 			assert!(!crypto::finish_batch_verify());
+	// 		// push invlaid
+	// 		crypto::sr25519_batch_verify(
+	// 			&Default::default(),
+	// 			&Vec::new(),
+	// 			&Default::default(),
+	// 		);
+	// 		assert!(!crypto::finish_batch_verify());
 
-// 			crypto::start_batch_verify();
-// 			for it in 0..70 {
-// 				let msg = format!("Schnorrkel {}!", it);
-// 				let signature = pair.sign(msg.as_bytes());
-// 				crypto::sr25519_batch_verify(&signature, msg.as_bytes(), &pair.public());
-// 			}
-// 			assert!(crypto::finish_batch_verify());
-// 		});
-// 	}
+	// 		crypto::start_batch_verify();
+	// 		for it in 0..70 {
+	// 			let msg = format!("Schnorrkel {}!", it);
+	// 			let signature = pair.sign(msg.as_bytes());
+	// 			crypto::sr25519_batch_verify(&signature, msg.as_bytes(), &pair.public());
+	// 		}
+	// 		assert!(crypto::finish_batch_verify());
+	// 	});
+	// }
 
-// 	#[test]
-// 	fn batching_works() {
-// 		let mut ext = BasicExternalities::default();
-// 		ext.register_extension(TaskExecutorExt::new(TaskExecutor::new()));
-// 		ext.execute_with(|| {
-// 			// invalid ed25519 signature
-// 			crypto::start_batch_verify();
-// 			crypto::ed25519_batch_verify(
-// 				&Default::default(),
-// 				&Vec::new(),
-// 				&Default::default(),
-// 			);
-// 			assert!(!crypto::finish_batch_verify());
+	// #[test]
+	// fn batching_works() {
+	// 	let mut ext = BasicExternalities::default();
+	// 	ext.register_extension(TaskExecutorExt::new(TaskExecutor::new()));
+	// 	ext.execute_with(|| {
+	// 		// invalid ed25519 signature
+	// 		crypto::start_batch_verify();
+	// 		crypto::ed25519_batch_verify(
+	// 			&Default::default(),
+	// 			&Vec::new(),
+	// 			&Default::default(),
+	// 		);
+	// 		assert!(!crypto::finish_batch_verify());
 
-// 			// 2 valid ed25519 signatures
-// 			crypto::start_batch_verify();
+	// 		// 2 valid ed25519 signatures
+	// 		crypto::start_batch_verify();
 
-// 			let pair = ed25519::Pair::generate_with_phrase(None).0;
-// 			let msg = b"Important message";
-// 			let signature = pair.sign(msg);
-// 			crypto::ed25519_batch_verify(&signature, msg, &pair.public());
+	// 		let pair = ed25519::Pair::generate_with_phrase(None).0;
+	// 		let msg = b"Important message";
+	// 		let signature = pair.sign(msg);
+	// 		crypto::ed25519_batch_verify(&signature, msg, &pair.public());
 
-// 			let pair = ed25519::Pair::generate_with_phrase(None).0;
-// 			let msg = b"Even more important message";
-// 			let signature = pair.sign(msg);
-// 			crypto::ed25519_batch_verify(&signature, msg, &pair.public());
+	// 		let pair = ed25519::Pair::generate_with_phrase(None).0;
+	// 		let msg = b"Even more important message";
+	// 		let signature = pair.sign(msg);
+	// 		crypto::ed25519_batch_verify(&signature, msg, &pair.public());
 
-// 			assert!(crypto::finish_batch_verify());
+	// 		assert!(crypto::finish_batch_verify());
 
-// 			// 1 valid, 1 invalid ed25519 signature
-// 			crypto::start_batch_verify();
+	// 		// 1 valid, 1 invalid ed25519 signature
+	// 		crypto::start_batch_verify();
 
-// 			let pair = ed25519::Pair::generate_with_phrase(None).0;
-// 			let msg = b"Important message";
-// 			let signature = pair.sign(msg);
-// 			crypto::ed25519_batch_verify(&signature, msg, &pair.public());
+	// 		let pair = ed25519::Pair::generate_with_phrase(None).0;
+	// 		let msg = b"Important message";
+	// 		let signature = pair.sign(msg);
+	// 		crypto::ed25519_batch_verify(&signature, msg, &pair.public());
 
-// 			crypto::ed25519_batch_verify(
-// 				&Default::default(),
-// 				&Vec::new(),
-// 				&Default::default(),
-// 			);
+	// 		crypto::ed25519_batch_verify(
+	// 			&Default::default(),
+	// 			&Vec::new(),
+	// 			&Default::default(),
+	// 		);
 
-// 			assert!(!crypto::finish_batch_verify());
+	// 		assert!(!crypto::finish_batch_verify());
 
-// 			// 1 valid ed25519, 2 valid sr25519
-// 			crypto::start_batch_verify();
+	// 		// 1 valid ed25519, 2 valid sr25519
+	// 		crypto::start_batch_verify();
 
-// 			let pair = ed25519::Pair::generate_with_phrase(None).0;
-// 			let msg = b"Ed25519 batching";
-// 			let signature = pair.sign(msg);
-// 			crypto::ed25519_batch_verify(&signature, msg, &pair.public());
+	// 		let pair = ed25519::Pair::generate_with_phrase(None).0;
+	// 		let msg = b"Ed25519 batching";
+	// 		let signature = pair.sign(msg);
+	// 		crypto::ed25519_batch_verify(&signature, msg, &pair.public());
 
-// 			let pair = sr25519::Pair::generate_with_phrase(None).0;
-// 			let msg = b"Schnorrkel rules";
-// 			let signature = pair.sign(msg);
-// 			crypto::sr25519_batch_verify(&signature, msg, &pair.public());
+	// 		let pair = sr25519::Pair::generate_with_phrase(None).0;
+	// 		let msg = b"Schnorrkel rules";
+	// 		let signature = pair.sign(msg);
+	// 		crypto::sr25519_batch_verify(&signature, msg, &pair.public());
 
-// 			let pair = sr25519::Pair::generate_with_phrase(None).0;
-// 			let msg = b"Schnorrkel batches!";
-// 			let signature = pair.sign(msg);
-// 			crypto::sr25519_batch_verify(&signature, msg, &pair.public());
+	// 		let pair = sr25519::Pair::generate_with_phrase(None).0;
+	// 		let msg = b"Schnorrkel batches!";
+	// 		let signature = pair.sign(msg);
+	// 		crypto::sr25519_batch_verify(&signature, msg, &pair.public());
 
-// 			assert!(crypto::finish_batch_verify());
+	// 		assert!(crypto::finish_batch_verify());
 
-// 			// 1 valid sr25519, 1 invalid sr25519
-// 			crypto::start_batch_verify();
+	// 		// 1 valid sr25519, 1 invalid sr25519
+	// 		crypto::start_batch_verify();
 
-// 			let pair = sr25519::Pair::generate_with_phrase(None).0;
-// 			let msg = b"Schnorrkcel!";
-// 			let signature = pair.sign(msg);
-// 			crypto::sr25519_batch_verify(&signature, msg, &pair.public());
+	// 		let pair = sr25519::Pair::generate_with_phrase(None).0;
+	// 		let msg = b"Schnorrkcel!";
+	// 		let signature = pair.sign(msg);
+	// 		crypto::sr25519_batch_verify(&signature, msg, &pair.public());
 
-// 			crypto::sr25519_batch_verify(
-// 				&Default::default(),
-// 				&Vec::new(),
-// 				&Default::default(),
-// 			);
+	// 		crypto::sr25519_batch_verify(
+	// 			&Default::default(),
+	// 			&Vec::new(),
+	// 			&Default::default(),
+	// 		);
 
-// 			assert!(!crypto::finish_batch_verify());
-// 		});
-// 	}
-// }
+	// 		assert!(!crypto::finish_batch_verify());
+	// 	});
+	// }
+	
+}

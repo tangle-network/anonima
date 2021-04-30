@@ -274,7 +274,7 @@ pub use service::{
 };
 
 pub use ac_peerset::ReputationChange;
-use sp_runtime::traits::{Block as BlockT, NumberFor};
+use ap_runtime::traits::{Block as BlockT, NumberFor};
 
 /// The maximum allowed number of established connections per peer.
 ///

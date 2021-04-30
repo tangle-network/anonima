@@ -1,11 +1,10 @@
 [package]
 name = "ap-core"
 version = "0.1.0"
-authors = ["mmacedoeu <contato@mmacedo.eu.org>"]
+authors = ["Parity Technologies <admin@parity.io>"]
 edition = "2018"
 license = "Apache-2.0"
-repository = "https://github.com/webb-tools/anonima"
-description = "Shareable types."
+description = "Shareable Substrate types."
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
@@ -62,6 +61,10 @@ criterion = "0.3.3"
 serde_json = "1.0"
 rand_chacha = "0.2.2"
 
+[[bench]]
+name = "bench"
+harness = false
+
 [lib]
 bench = false
 
@@ -71,6 +74,7 @@ std = [
 	"full_crypto",
 	"log/std",
 	"thiserror",
+	"wasmi",
 	"lazy_static",
 	"parking_lot",
 	"primitive-types/std",
@@ -98,6 +102,7 @@ std = [
 	"regex",
 	"num-traits/std",
 	"tiny-keccak",
+	"sp-debug-derive/std",
 	"sp-externalities",
 	"sp-storage/std",
 	"sp-runtime-interface/std",

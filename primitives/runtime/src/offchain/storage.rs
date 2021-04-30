@@ -99,64 +99,64 @@ impl<'a> StorageValueRef<'a> {
 	}
 }
 
-// #[cfg(test)]
-// mod tests {
-// 	use super::*;
-// 	use ap_io::TestExternalities;
-// 	use ap_core::offchain::{
-// 		OffchainExt,
-// 		testing,
-// 	};
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use ap_io::TestExternalities;
+	use ap_core::offchain::{
+		OffchainExt,
+		testing,
+	};
 
-// 	#[test]
-// 	fn should_set_and_get() {
-// 		let (offchain, state) = testing::TestOffchainExt::new();
-// 		let mut t = TestExternalities::default();
-// 		t.register_extension(OffchainExt::new(offchain));
+	#[test]
+	fn should_set_and_get() {
+		let (offchain, state) = testing::TestOffchainExt::new();
+		let mut t = TestExternalities::default();
+		t.register_extension(OffchainExt::new(offchain));
 
-// 		t.execute_with(|| {
-// 			let val = StorageValue::persistent(b"testval");
+		t.execute_with(|| {
+			let val = StorageValue::persistent(b"testval");
 
-// 			assert_eq!(val.get::<u32>(), None);
+			assert_eq!(val.get::<u32>(), None);
 
-// 			val.set(&15_u32);
+			val.set(&15_u32);
 
-// 			assert_eq!(val.get::<u32>(), Some(Some(15_u32)));
-// 			assert_eq!(val.get::<Vec<u8>>(), Some(None));
-// 			assert_eq!(
-// 				state.read().persistent_storage.get(b"testval"),
-// 				Some(vec![15_u8, 0, 0, 0])
-// 			);
-// 		})
-// 	}
+			assert_eq!(val.get::<u32>(), Some(Some(15_u32)));
+			assert_eq!(val.get::<Vec<u8>>(), Some(None));
+			assert_eq!(
+				state.read().persistent_storage.get(b"testval"),
+				Some(vec![15_u8, 0, 0, 0])
+			);
+		})
+	}
 
-// 	#[test]
-// 	fn should_mutate() {
-// 		let (offchain, state) = testing::TestOffchainExt::new();
-// 		let mut t = TestExternalities::default();
-// 		t.register_extension(OffchainExt::new(offchain));
+	#[test]
+	fn should_mutate() {
+		let (offchain, state) = testing::TestOffchainExt::new();
+		let mut t = TestExternalities::default();
+		t.register_extension(OffchainExt::new(offchain));
 
-// 		t.execute_with(|| {
-// 			let val = StorageValue::persistent(b"testval");
+		t.execute_with(|| {
+			let val = StorageValue::persistent(b"testval");
 
-// 			let result = val.mutate::<u32, (), _>(|val| {
-// 				assert_eq!(val, None);
+			let result = val.mutate::<u32, (), _>(|val| {
+				assert_eq!(val, None);
 
-// 				Ok(16_u32)
-// 			});
-// 			assert_eq!(result, Ok(Ok(16_u32)));
-// 			assert_eq!(val.get::<u32>(), Some(Some(16_u32)));
-// 			assert_eq!(
-// 				state.read().persistent_storage.get(b"testval"),
-// 				Some(vec![16_u8, 0, 0, 0])
-// 			);
+				Ok(16_u32)
+			});
+			assert_eq!(result, Ok(Ok(16_u32)));
+			assert_eq!(val.get::<u32>(), Some(Some(16_u32)));
+			assert_eq!(
+				state.read().persistent_storage.get(b"testval"),
+				Some(vec![16_u8, 0, 0, 0])
+			);
 
-// 			// mutate again, but this time early-exit.
-// 			let res = val.mutate::<u32, (), _>(|val| {
-// 				assert_eq!(val, Some(Some(16_u32)));
-// 				Err(())
-// 			});
-// 			assert_eq!(res, Err(()));
-// 		})
-// 	}
-// }
+			// mutate again, but this time early-exit.
+			let res = val.mutate::<u32, (), _>(|val| {
+				assert_eq!(val, Some(Some(16_u32)));
+				Err(())
+			});
+			assert_eq!(res, Err(()));
+		})
+	}
+}
