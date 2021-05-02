@@ -1,20 +1,12 @@
 // Copyright 2020 ChainSafe Systems
 // SPDX-License-Identifier: Apache-2.0, MIT
 
-use clock::ChainEpoch;
-use forest_cid::Cid;
 use forest_encoding::tuple::*;
 use num_bigint::BigInt;
 
 /// Hello message https://filecoin-project.github.io/specs/#hello-spec
 #[derive(Clone, Debug, PartialEq, Serialize_tuple, Deserialize_tuple)]
-pub struct HelloRequest {
-    pub heaviest_tip_set: Vec<Cid>,
-    pub heaviest_tipset_height: ChainEpoch,
-    #[serde(with = "num_bigint::bigint_ser")]
-    pub heaviest_tipset_weight: BigInt,
-    pub genesis_hash: Cid,
-}
+pub struct HelloRequest {}
 
 /// Response to a Hello message. This just handles latency of the peer.
 #[derive(Clone, Debug, PartialEq, Serialize_tuple, Deserialize_tuple)]

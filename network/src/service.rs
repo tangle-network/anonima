@@ -39,10 +39,6 @@ const PUBSUB_TOPICS: [&str; 2] = [PUBSUB_BLOCK_STR, PUBSUB_MSG_STR];
 /// Events emitted by this Service.
 #[derive(Debug)]
 pub enum NetworkEvent {
-    PubsubMessage {
-        source: PeerId,
-        message: PubsubMessage,
-    },
     HelloRequest {
         request: HelloRequest,
         source: PeerId,
@@ -51,20 +47,9 @@ pub enum NetworkEvent {
     PeerDisconnected(PeerId),
 }
 
-/// Message types that can come over GossipSub
-#[derive(Debug, Clone)]
-pub enum PubsubMessage {
-    /// Messages that come over the message topic
-    Message(SignedMessage),
-}
-
 /// Messages into the service to handle.
 #[derive(Debug)]
 pub enum NetworkMessage {
-    PubsubMessage {
-        topic: IdentTopic,
-        message: Vec<u8>,
-    },
     HelloRequest {
         peer_id: PeerId,
         request: HelloRequest,
@@ -164,29 +149,6 @@ impl Libp2pService {
                         }
                         ForestBehaviourEvent::PeerDisconnected(peer_id) => {
                             emit_event(&self.network_sender_out, NetworkEvent::PeerDisconnected(peer_id)).await;
-                        }
-                        ForestBehaviourEvent::GossipMessage {
-                            source,
-                            topic,
-                            message,
-                        } => {
-                            trace!("Got a Gossip Message from {:?}", source);
-                            let topic = topic.as_str();
-                            if topic == pubsub_msg_str {
-                                match from_slice::<SignedMessage>(&message) {
-                                    Ok(m) => {
-                                        emit_event(&self.network_sender_out, NetworkEvent::PubsubMessage{
-                                            source,
-                                            message: PubsubMessage::Message(m),
-                                        }).await;
-                                    }
-                                    Err(e) => {
-                                        warn!("Gossip Message from peer {:?} could not be deserialized: {}", source, e);
-                                    }
-                                }
-                            } else {
-                                warn!("Getting gossip messages from unknown topic: {}", topic);
-                            }
                         }
                         ForestBehaviourEvent::HelloRequest { request,  peer } => {
                             debug!("Received hello request (peer_id: {:?})", peer);
