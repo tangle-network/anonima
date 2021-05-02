@@ -5,5 +5,9 @@ members = [
 	"encoding",
 	"key_management",
 	"network",
-	"utils",
+    "utils/bigint",
+    "utils/bitfield",
+    "utils/hash_utils",
+    "utils/json_utils",
+    "utils/net_utils",
 ]

@@ -1,7 +1,6 @@
 // Copyright 2020 ChainSafe Systems
 // SPDX-License-Identifier: Apache-2.0, MIT
 
-use crate::{PUBSUB_BLOCK_STR, PUBSUB_MSG_STR};
 use libp2p::gossipsub::{
     score_parameter_decay, IdentTopic, PeerScoreParams, PeerScoreThresholds, TopicScoreParams,
 };
@@ -60,13 +59,6 @@ fn build_block_topic_config() -> TopicScoreParams {
 #[allow(dead_code)]
 pub(crate) fn build_peer_score_params(network_name: &str) -> PeerScoreParams {
     let mut psp_topics = HashMap::new();
-
-    // msg topic
-    let msg_topic = IdentTopic::new(format!("{}/{}", PUBSUB_MSG_STR, network_name));
-    psp_topics.insert(msg_topic.hash(), build_msg_topic_config());
-    // block topic
-    let block_topic = IdentTopic::new(format!("{}/{}", PUBSUB_BLOCK_STR, network_name));
-    psp_topics.insert(block_topic.hash(), build_block_topic_config());
 
     PeerScoreParams {
         app_specific_weight: 1.0,

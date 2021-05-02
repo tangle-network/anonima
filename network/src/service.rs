@@ -29,13 +29,6 @@ use std::sync::Arc;
 use std::time::Duration;
 use utils::read_file_to_vec;
 
-/// Gossipsub Filecoin blocks topic identifier.
-pub const PUBSUB_BLOCK_STR: &str = "/fil/blocks";
-/// Gossipsub Filecoin messages topic identifier.
-pub const PUBSUB_MSG_STR: &str = "/fil/msgs";
-
-const PUBSUB_TOPICS: [&str; 2] = [PUBSUB_BLOCK_STR, PUBSUB_MSG_STR];
-
 /// Events emitted by this Service.
 #[derive(Debug)]
 pub enum NetworkEvent {
@@ -105,12 +98,6 @@ impl Libp2pService {
 
         Swarm::listen_on(&mut swarm, config.listening_multiaddr).unwrap();
 
-        // Subscribe to gossipsub topics with the network name suffix
-        for topic in PUBSUB_TOPICS.iter() {
-            let t = Topic::new(format!("{}/{}", topic, network_name));
-            swarm.subscribe(&t).unwrap();
-        }
-
         // Bootstrap with Kademlia
         if let Err(e) = swarm.bootstrap() {
             warn!("Failed to bootstrap with Kademlia: {}", e);
@@ -134,8 +121,6 @@ impl Libp2pService {
         let mut swarm_stream = self.swarm.fuse();
         let mut network_stream = self.network_receiver_in.fuse();
         // let mut interval = stream::interval(Duration::from_secs(15)).fuse();
-        let pubsub_block_str = format!("{}/{}", PUBSUB_BLOCK_STR, self.network_name);
-        let pubsub_msg_str = format!("{}/{}", PUBSUB_MSG_STR, self.network_name);
 
         loop {
             select! {
@@ -163,11 +148,6 @@ impl Libp2pService {
                 rpc_message = network_stream.next() => match rpc_message {
                     // Inbound messages
                     Some(message) =>  match message {
-                        NetworkMessage::PubsubMessage { topic, message } => {
-                            if let Err(e) = swarm_stream.get_mut().publish(topic, message) {
-                                warn!("Failed to send gossipsub message: {:?}", e);
-                            }
-                        }
                         NetworkMessage::HelloRequest { peer_id, request, response_channel } => {
                             swarm_stream.get_mut().send_hello_request(&peer_id, request, response_channel);
                         }
