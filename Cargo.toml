@@ -1,0 +1,7 @@
+[workspace]
+members = [
+	"anonima",
+	"crypto",
+	"key_management",
+	"network",
+]
