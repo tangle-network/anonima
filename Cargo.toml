@@ -1,9 +1,11 @@
 [workspace]
 members = [
+	"address",
 	"anonima",
 	"crypto",
 	"encoding",
 	"key_management",
+	"message",
 	"network",
     "utils/bigint",
     "utils/bitfield",

@@ -1,7 +1,9 @@
 // Copyright 2020 ChainSafe Systems
 // SPDX-License-Identifier: Apache-2.0, MIT
 
-use async_std::stream::{self, Interval};
+use async_std::prelude::*;
+use async_std::stream;
+
 use async_std::task;
 use futures::prelude::*;
 use libp2p::{
@@ -171,7 +173,7 @@ pub struct DiscoveryBehaviour {
     /// Discovers nodes on the local network.
     mdns: Toggle<Mdns>,
     /// Stream that fires when we need to perform the next random Kademlia query.
-    next_kad_random_query: Interval,
+    next_kad_random_query: async_std::stream::Interval,
     /// After `next_kad_random_query` triggers, the next one triggers after this duration.
     duration_to_next_kad: Duration,
     /// Events to return in priority when polled.

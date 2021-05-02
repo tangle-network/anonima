@@ -1,0 +1,36 @@
+[package]
+name = "forest_message"
+description = "Filecoin message types"
+license = "MIT OR Apache-2.0"
+version = "0.7.2"
+authors = ["ChainSafe Systems <info@chainsafe.io>"]
+edition = "2018"
+repository = "https://github.com/ChainSafe/forest"
+
+[package.metadata.docs.rs]
+features = ["json", "proofs"]
+
+[dependencies]
+address = { path = "../address", package = "forest_address" }
+num-bigint = { path = "../utils/bigint", package = "forest_bigint", version = "0.1.1" }
+encoding = { path = "../encoding", package = "forest_encoding" }
+crypto = { path = "../crypto", default-features = false }
+derive_builder = "0.9"
+serde = { version = "1.0", features = ["derive"] }
+base64 = { version = "0.13", optional = true }
+forest_json_utils = { path = "../utils/json_utils", optional = true, version = "0.1" }
+num-traits = "0.2"
+num-derive = "0.3.0"
+fil_types = { optional = true, version = "0.2" }
+
+[dev-dependencies]
+serde_json = "1.0"
+
+[features]
+default = ["blst"]
+blst = ["crypto/blst"]
+pairing = ["crypto/pairing"]
+
+json = ["base64", "crypto/json", "forest_json_utils", "num-bigint/json"]
+# TODO try to prune out this dependency before releasing
+proofs = ["fil_types"]

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0, MIT
 
 use libp2p::gossipsub::{
-    score_parameter_decay, IdentTopic, PeerScoreParams, PeerScoreThresholds, TopicScoreParams,
+    score_parameter_decay, PeerScoreParams, PeerScoreThresholds, TopicScoreParams,
 };
 use std::{collections::HashMap, time::Duration};
 

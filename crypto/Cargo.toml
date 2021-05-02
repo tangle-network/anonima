@@ -11,8 +11,8 @@ repository = "https://github.com/ChainSafe/forest"
 features = ["json"]
 
 [dependencies]
-address = { package = "forest_address", version = "0.3" }
-encoding = { package = "forest_encoding", version = "0.2.1" }
+address = { path = "../address", package = "forest_address" }
+encoding = { path = "../encoding", package = "forest_encoding" }
 libsecp256k1 = "0.3.4"
 bls-signatures = { version = "0.9", default-features = false }
 serde = { version = "1.0", features = ["derive"] }

@@ -265,6 +265,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "async-process"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8f38756dd9ac84671c428afbf7c9f7495feff9ec5b0710f17100098e5b354ac"
+dependencies = [
+ "async-io",
+ "blocking",
+ "cfg-if",
+ "event-listener",
+ "futures-lite",
+ "libc",
+ "once_cell",
+ "signal-hook",
+ "winapi",
+]
+
+[[package]]
 name = "async-std"
 version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -275,6 +292,7 @@ dependencies = [
  "async-global-executor",
  "async-io",
  "async-lock",
+ "async-process",
  "crossbeam-utils",
  "futures-channel",
  "futures-core",
@@ -614,6 +632,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "chrono"
+version = "0.4.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "670ad68c9088c2a963aaa298cb369688cf3f9465ce5e2d4ca10e6e0098a1ce73"
+dependencies = [
+ "libc",
+ "num-integer",
+ "num-traits",
+ "time",
+ "winapi",
+]
+
+[[package]]
 name = "cid"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -773,8 +804,8 @@ version = "0.5.2"
 dependencies = [
  "base64 0.13.0",
  "bls-signatures",
- "forest_address",
- "forest_encoding 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "forest_address 0.3.1",
+ "forest_encoding 0.2.1",
  "libsecp256k1",
  "num-derive",
  "num-traits",
@@ -921,6 +952,41 @@ dependencies = [
 ]
 
 [[package]]
+name = "darling"
+version = "0.10.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0d706e75d87e35569db781a9b5e2416cff1236a47ed380831f959382ccd5f858"
+dependencies = [
+ "darling_core",
+ "darling_macro",
+]
+
+[[package]]
+name = "darling_core"
+version = "0.10.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f0c960ae2da4de88a91b2d920c2a7233b400bc33cb28453a2987822d8392519b"
+dependencies = [
+ "fnv",
+ "ident_case",
+ "proc-macro2 1.0.26",
+ "quote 1.0.9",
+ "strsim",
+ "syn 1.0.69",
+]
+
+[[package]]
+name = "darling_macro"
+version = "0.10.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d9b5a2f4ac4969822c62224815d069952656cadc7084fdca9751e6d959189b72"
+dependencies = [
+ "darling_core",
+ "quote 1.0.9",
+ "syn 1.0.69",
+]
+
+[[package]]
 name = "data-encoding"
 version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -947,6 +1013,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "derive_builder"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a2658621297f2cf68762a6f7dc0bb7e1ff2cfd6583daef8ee0fed6f7ec468ec0"
+dependencies = [
+ "darling",
+ "derive_builder_core",
+ "proc-macro2 1.0.26",
+ "quote 1.0.9",
+ "syn 1.0.69",
+]
+
+[[package]]
+name = "derive_builder_core"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2791ea3e372c8495c0bc2033991d76b512cd799d07491fbd6890124db9458bef"
+dependencies = [
+ "darling",
+ "proc-macro2 1.0.26",
+ "quote 1.0.9",
+ "syn 1.0.69",
+]
+
+[[package]]
 name = "digest"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -962,6 +1053,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d3dd60d1080a57a05ab032377049e0591415d2b31afd7028356dbf3cc6dcb066"
 dependencies = [
  "generic-array 0.14.4",
+]
+
+[[package]]
+name = "dirs"
+version = "3.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "30baa043103c9d0c2a57cf537cc2f35623889dc0d405e6c3cccfadbc81c71309"
+dependencies = [
+ "dirs-sys",
+]
+
+[[package]]
+name = "dirs-sys"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "03d86534ed367a67548dc68113a0f5db55432fdfbb6e6f9d77704397d95d5780"
+dependencies = [
+ "libc",
+ "redox_users",
+ "winapi",
 ]
 
 [[package]]
@@ -1087,6 +1198,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "fil_clock"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cd56a516e27ede90cdf852ba9fd40d89bcab385e8c15ebeb2b3b864d4e759fc2"
+dependencies = [
+ "chrono",
+]
+
+[[package]]
+name = "fil_types"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9696a29bd5c29b66c07912fc9d9772aafaba2127437bb0ac1eb5aa78c273a2ad"
+dependencies = [
+ "async-std",
+ "chrono",
+ "fil_clock",
+ "forest_address 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "forest_bigint 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "forest_cid",
+ "forest_encoding 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "forest_vm",
+ "git-version",
+ "lazy_static",
+ "num-derive",
+ "num-traits",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "fixedbitset"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1125,12 +1267,29 @@ checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 [[package]]
 name = "forest_address"
 version = "0.3.1"
+dependencies = [
+ "data-encoding",
+ "data-encoding-macro",
+ "forest_encoding 0.2.1",
+ "forest_json_utils 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "leb128",
+ "num-derive",
+ "num-traits",
+ "once_cell",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "forest_address"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0dd6b3511082cd6d99581720a6af422fd319bf2e8dead77adc5c17b36ad9e6f6"
 dependencies = [
  "data-encoding",
  "data-encoding-macro",
  "forest_encoding 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "forest_json_utils 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "leb128",
  "num-derive",
  "num-traits",
@@ -1141,6 +1300,18 @@ dependencies = [
 [[package]]
 name = "forest_bigint"
 version = "0.1.4"
+dependencies = [
+ "cs_serde_bytes",
+ "num-bigint 0.3.2",
+ "num-integer",
+ "serde",
+]
+
+[[package]]
+name = "forest_bigint"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "559d63f33ef82723a75b2b25703b31c50a55d2950ead45e239e49b19aeefd1e7"
 dependencies = [
  "cs_serde_bytes",
  "num-bigint 0.3.2",
@@ -1170,10 +1341,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8e1a935d7f977a7debbc507de2ab7990b834d85e94c819e5268b1adaefd7d434"
 dependencies = [
  "cid",
+ "cs_serde_bytes",
+ "cs_serde_cbor",
+ "forest_json_utils 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "generic-array 0.14.4",
  "integer-encoding",
  "multibase 0.9.1",
  "multihash",
+ "serde",
 ]
 
 [[package]]
@@ -1184,7 +1359,7 @@ checksum = "04c7a0c2a61a9e0fa8c14f0055d890c18c91be632dd5b6106f89d2cad9f8528b"
 dependencies = [
  "base64 0.13.0",
  "bls-signatures",
- "forest_address",
+ "forest_address 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "forest_encoding 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "libsecp256k1",
  "num-derive",
@@ -1239,15 +1414,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "forest_json_utils"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0da39ba6848c04b22e70520a1339f04f304502a0ebfd4526ea8a566452ea62a8"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "forest_libp2p"
 version = "0.1.0"
 dependencies = [
  "async-std",
  "async-trait",
  "bytes 1.0.1",
+ "dirs",
  "fnv",
- "forest_bigint",
+ "forest_bigint 0.1.4",
  "forest_encoding 0.2.1",
+ "forest_message",
  "futures",
  "futures-util",
  "futures_cbor_codec",
@@ -1258,6 +1444,42 @@ dependencies = [
  "log",
  "serde",
  "smallvec",
+ "toml",
+]
+
+[[package]]
+name = "forest_message"
+version = "0.7.2"
+dependencies = [
+ "base64 0.13.0",
+ "crypto",
+ "derive_builder",
+ "fil_types",
+ "forest_address 0.3.1",
+ "forest_bigint 0.1.4",
+ "forest_encoding 0.2.1",
+ "forest_json_utils 0.1.1",
+ "num-derive",
+ "num-traits",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "forest_vm"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee840f104202f76125e6c01063b1ea05cdcc55e2005dbfffb42012f733b1c092"
+dependencies = [
+ "forest_address 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "forest_bigint 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "forest_cid",
+ "forest_encoding 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lazy_static",
+ "num-derive",
+ "num-traits",
+ "serde",
+ "thiserror",
 ]
 
 [[package]]
@@ -1649,6 +1871,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9a3a5bfb195931eeb336b2a7b4d761daec841b97f947d34394601737a7bba5e4"
 
 [[package]]
+name = "ident_case"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
+
+[[package]]
 name = "idna"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1797,7 +2025,7 @@ version = "0.1.0"
 dependencies = [
  "base64 0.13.0",
  "bls-signatures",
- "forest_address",
+ "forest_address 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "forest_crypto",
  "forest_encoding 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "libsecp256k1",
@@ -3103,6 +3331,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "redox_users"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "528532f3d801c87aec9def2add9ca802fe569e44a544afe633765267840abe64"
+dependencies = [
+ "getrandom 0.2.2",
+ "redox_syscall",
+]
+
+[[package]]
 name = "regex"
 version = "1.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3380,6 +3618,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "signal-hook"
+version = "0.3.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ef33d6d0cd06e0840fba9985aab098c147e67e05cee14d412d3345ed14ff30ac"
+dependencies = [
+ "libc",
+ "signal-hook-registry",
+]
+
+[[package]]
+name = "signal-hook-registry"
+version = "1.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "16f1d0fef1604ba8f7a073c7e701f213e056707210e9020af4528e0101ce11a6"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "signature"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3504,6 +3761,12 @@ dependencies = [
  "block-cipher",
  "generic-array 0.14.4",
 ]
+
+[[package]]
+name = "strsim"
+version = "0.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6446ced80d6c486436db5c078dde11a9f73d42b57fb273121e160b84f63d894c"
 
 [[package]]
 name = "subtle"
