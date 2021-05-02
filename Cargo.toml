@@ -2,6 +2,8 @@
 members = [
 	"anonima",
 	"crypto",
+	"encoding",
 	"key_management",
 	"network",
+	"utils",
 ]
