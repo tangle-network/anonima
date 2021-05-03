@@ -5,12 +5,14 @@ use super::cli::{block_until_sigint, Config};
 use async_std::{channel::bounded, sync::RwLock, task};
 use libp2p::identity::{ed25519, Keypair};
 use log::{debug, info, trace};
+use rpassword::read_password;
 use std::io::prelude::*;
 use std::path::PathBuf;
 use std::sync::Arc;
-use utils::write_to_file;
+use forest_libp2p::utils::write_to_file;
 use wallet::ENCRYPTED_KEYSTORE_NAME;
 use wallet::{KeyStore, KeyStoreConfig};
+use forest_libp2p::get_keypair;
 
 /// Starts daemon process
 pub(super) async fn start(config: Config) {
@@ -67,10 +69,6 @@ pub(super) async fn start(config: Config) {
             .expect("Error initializing keystore")
     };
 
-    if ks.get(JWT_IDENTIFIER).is_err() {
-        ks.put(JWT_IDENTIFIER.to_owned(), generate_priv_key())
-            .unwrap();
-    }
     let keystore = Arc::new(RwLock::new(ks));
 
     // Initialize database (RocksDb will be default if both features enabled)
@@ -87,10 +85,6 @@ pub(super) async fn start(config: Config) {
     });
 
     // Cancel all async services
-    sync_task.cancel().await;
-    if let Some(task) = rpc_task {
-        task.cancel().await;
-    }
     keystore_write.await;
 
     info!("Anonima finish shutdown");

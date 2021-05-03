@@ -13,7 +13,7 @@ use std::process;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use structopt::StructOpt;
-use utils::{read_file_to_string, read_toml};
+use forest_libp2p::utils::{read_file_to_string, read_toml};
 
 /// CLI structure generated when interacting with Forest binary
 #[derive(StructOpt)]
@@ -26,8 +26,6 @@ use utils::{read_file_to_string, read_toml};
 pub struct CLI {
     #[structopt(flatten)]
     pub daemon_opts: DaemonOpts,
-    #[structopt(subcommand)]
-    pub cmd: Option<Subcommand>,
 }
 
 /// Daemon process command line options.
@@ -45,7 +43,6 @@ pub struct DaemonOpts {
     pub kademlia: Option<bool>,
     #[structopt(short, long, help = "Allow MDNS (default = false)")]
     pub mdns: Option<bool>,
-    pub skip_load: bool,
     #[structopt(long, help = "Number of worker sync tasks spawned (default is 1")]
     pub worker_tasks: Option<usize>,
     #[structopt(
@@ -71,9 +68,7 @@ impl DaemonOpts {
             }
             None => Config::default(),
         };
-        if let Some(genesis_file) = &self.genesis {
-            cfg.genesis_file = Some(genesis_file.to_owned());
-        }
+
         if self.rpc.unwrap_or(cfg.enable_rpc) {
             cfg.enable_rpc = true;
             cfg.rpc_port = self.port.to_owned().unwrap_or(cfg.rpc_port);
@@ -85,16 +80,6 @@ impl DaemonOpts {
         cfg.network.mdns = self.mdns.unwrap_or(cfg.network.mdns);
         if let Some(target_peer_count) = self.target_peer_count {
             cfg.network.target_peer_count = target_peer_count;
-        }
-        // (where to find these flags, should be easy to do with structops)
-
-        // check and set syncing configurations
-        // TODO add MAX conditions
-        if let Some(req_window) = &self.req_window {
-            cfg.sync.req_window = req_window.to_owned();
-        }
-        if let Some(worker_tsk) = &self.worker_tasks {
-            cfg.sync.worker_tasks = worker_tsk.to_owned();
         }
 
         Ok(cfg)

@@ -66,50 +66,6 @@ impl UnsignedMessage {
         // TODO: Add proper impl for anonima
         return vec![];
     }
-
-    /// Semantic validation and validates the message has enough gas.
-    #[cfg(feature = "proofs")]
-    pub fn valid_for_block_inclusion(
-        &self,
-        min_gas: i64,
-        version: fil_types::NetworkVersion,
-    ) -> Result<(), String> {
-        use fil_types::{NetworkVersion, BLOCK_GAS_LIMIT, TOTAL_FILECOIN, ZERO_ADDRESS};
-        use num_traits::Signed;
-        if self.version != 0 {
-            return Err(format!("Message version: {} not  supported", self.version));
-        }
-        if self.to == *ZERO_ADDRESS && version >= NetworkVersion::V7 {
-            return Err("invalid 'to' address".to_string());
-        }
-        if self.value.is_negative() {
-            return Err("message value cannot be negative".to_string());
-        }
-        if self.value > *TOTAL_FILECOIN {
-            return Err("message value cannot be greater than total FIL supply".to_string());
-        }
-        if self.gas_fee_cap.is_negative() {
-            return Err("gas_fee_cap cannot be negative".to_string());
-        }
-        if self.gas_premium.is_negative() {
-            return Err("gas_premium cannot be negative".to_string());
-        }
-        if self.gas_premium > self.gas_fee_cap {
-            return Err("gas_fee_cap less than gas_premium".to_string());
-        }
-        if self.gas_limit > BLOCK_GAS_LIMIT {
-            return Err("gas_limit cannot be greater than block gas limit".to_string());
-        }
-
-        if self.gas_limit < min_gas {
-            return Err(format!(
-                "gas_limit {} cannot be less than cost {} of storing a message on chain",
-                self.gas_limit, min_gas
-            ));
-        }
-
-        Ok(())
-    }
 }
 
 impl Serialize for UnsignedMessage {
@@ -203,16 +159,6 @@ pub mod json {
         version: i64,
         to: AddressJson,
         from: AddressJson,
-        #[serde(rename = "Nonce")]
-        sequence: u64,
-        #[serde(with = "bigint_ser::json")]
-        value: TokenAmount,
-        gas_limit: i64,
-        #[serde(with = "bigint_ser::json")]
-        gas_fee_cap: TokenAmount,
-        #[serde(with = "bigint_ser::json")]
-        gas_premium: TokenAmount,
-        #[serde(rename = "Method")]
         method_num: u64,
         params: Option<String>,
         #[serde(default, rename = "CID", with = "cid::json::opt")]
@@ -227,14 +173,8 @@ pub mod json {
             version: m.version,
             to: m.to.into(),
             from: m.from.into(),
-            sequence: m.sequence,
-            value: m.value.clone(),
-            gas_limit: m.gas_limit,
-            gas_fee_cap: m.gas_fee_cap.clone(),
-            gas_premium: m.gas_premium.clone(),
             method_num: m.method_num,
             params: Some(base64::encode(m.params.bytes())),
-            cid: Some(m.cid().map_err(ser::Error::custom)?),
         }
         .serialize(serializer)
     }
@@ -248,11 +188,6 @@ pub mod json {
             version: m.version,
             to: m.to.into(),
             from: m.from.into(),
-            sequence: m.sequence,
-            value: m.value,
-            gas_limit: m.gas_limit,
-            gas_fee_cap: m.gas_fee_cap,
-            gas_premium: m.gas_premium,
             method_num: m.method_num,
             params: Serialized::new(
                 base64::decode(&m.params.unwrap_or_else(|| "".to_string()))

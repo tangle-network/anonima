@@ -8,7 +8,7 @@ use crate::{
     rpc::RequestResponseError,
 };
 use async_std::channel::{unbounded, Receiver, Sender};
-use async_std::{stream, task};
+use async_std::{stream};
 use futures::channel::oneshot::Sender as OneShotSender;
 use futures::select;
 use futures_util::stream::StreamExt;
@@ -218,10 +218,10 @@ impl Libp2pService {
                     }
                     None => { break; }
                 },
-                // interval_event = interval.next() => if interval_event.is_some() {
-                //     // Print peer count on an interval.
-                //     info!("Peers connected: {}", swarm_stream.get_mut().peers().len());
-                // }
+                interval_event = interval.next() => if interval_event.is_some() {
+                    // Print peer count on an interval.
+                    info!("Peers connected: {}", swarm_stream.get_mut().peers().len());
+                }
             };
         }
     }

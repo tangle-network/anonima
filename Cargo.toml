@@ -3,6 +3,7 @@ members = [
 	"address",
 	"anonima",
 	"crypto",
+	"db",
 	"encoding",
 	"key_management",
 	"message",
