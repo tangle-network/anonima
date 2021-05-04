@@ -1,4 +1,3 @@
-mod cosmos;
 mod ethereum;
 mod substrate;
 
