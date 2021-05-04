@@ -2,6 +2,7 @@
 members = [
 	"address",
 	"anonima",
+	"connections",
 	"crypto",
 	"db",
 	"encoding",
