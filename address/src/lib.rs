@@ -372,7 +372,7 @@ pub mod json {
     pub mod vec {
         use super::*;
         use crate::json::{AddressJson, AddressJsonRef};
-        use forest_json_utils::GoVecVisitor;
+        use anonima_json_utils::GoVecVisitor;
         use serde::ser::SerializeSeq;
 
         /// Wrapper for serializing and deserializing a Cid vector from JSON.

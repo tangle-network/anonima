@@ -1,7 +1,7 @@
 // Copyright 2020 ChainSafe Systems
 // SPDX-License-Identifier: Apache-2.0, MIT
 
-use forest_encoding::from_slice;
+use anonima_encoding::from_slice;
 use super::{ForestBehaviour, ForestBehaviourEvent, Libp2pConfig};
 use crate::{
     hello::{HelloRequest, HelloResponse},

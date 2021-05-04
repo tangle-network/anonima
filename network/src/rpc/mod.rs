@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0, MIT
 
 use async_trait::async_trait;
-use forest_encoding::to_vec;
+use anonima_encoding::to_vec;
 use futures::prelude::*;
 use futures_cbor_codec::Decoder;
 use futures_codec::FramedRead;

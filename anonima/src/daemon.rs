@@ -9,10 +9,10 @@ use rpassword::read_password;
 use std::io::prelude::*;
 use std::path::PathBuf;
 use std::sync::Arc;
-use forest_libp2p::utils::write_to_file;
+use anonima_libp2p::utils::write_to_file;
 use wallet::ENCRYPTED_KEYSTORE_NAME;
 use wallet::{KeyStore, KeyStoreConfig};
-use forest_libp2p::get_keypair;
+use anonima_libp2p::get_keypair;
 
 /// Starts daemon process
 pub(super) async fn start(config: Config) {

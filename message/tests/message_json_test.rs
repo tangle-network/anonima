@@ -5,12 +5,12 @@
 
 use address::Address;
 use crypto::{Signature, Signer};
-use forest_message::signed_message::{
+use anonima_message::signed_message::{
     self,
     json::{SignedMessageJson, SignedMessageJsonRef},
     SignedMessage,
 };
-use forest_message::unsigned_message::{
+use anonima_message::unsigned_message::{
     self,
     json::{UnsignedMessageJson, UnsignedMessageJsonRef},
     UnsignedMessage,

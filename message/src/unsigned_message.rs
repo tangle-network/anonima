@@ -14,7 +14,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 ///
 /// Usage:
 /// ```
-/// use forest_message::{UnsignedMessage, Message};
+/// use anonima_message::{UnsignedMessage, Message};
 /// use vm::{TokenAmount, Serialized, MethodNum};
 /// use address::Address;
 ///
@@ -198,7 +198,7 @@ pub mod json {
 
     pub mod vec {
         use super::*;
-        use forest_json_utils::GoVecVisitor;
+        use anonima_json_utils::GoVecVisitor;
         use serde::ser::SerializeSeq;
 
         pub fn serialize<S>(m: &[UnsignedMessage], serializer: S) -> Result<S::Ok, S::Error>

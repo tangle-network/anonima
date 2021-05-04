@@ -10,7 +10,7 @@ async-std = { version = "1.9", features = ["attributes", "tokio1"] }
 structopt = { version = "0.3" }
 ctrlc = "3.1.4"
 rpassword = "0.0.4"
-db = { path = "../db", package = "forest_db" }
+db = { path = "../db", package = "anonima_db" }
 
 futures = "0.3.5"
 log = "0.4.8"
@@ -29,9 +29,9 @@ rand = "0.7"
 # Anonima
 wallet = { package = "key_management", path = "../key_management" }
 net_utils = { path = "../utils/net_utils" }
-num-bigint = { path = "../utils/bigint", package = "forest_bigint" }
-address = { path = "../address", package = "forest_address", version = "0.3" }
-forest_libp2p = { path = "../network" }
+num-bigint = { path = "../utils/bigint", package = "anonima_bigint" }
+address = { path = "../address", package = "anonima-address", version = "0.3" }
+anonima_libp2p = { path = "../network" }
 
 [dependencies.jsonrpc-v2]
 version = "0.10.0"

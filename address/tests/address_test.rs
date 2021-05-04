@@ -3,7 +3,7 @@
 
 use data_encoding::{DecodeError, DecodeKind};
 use encoding::{from_slice, Cbor};
-use forest_address::{
+use anonima_address::{
     checksum, validate_checksum, Address, Error, Network, Protocol, BLS_PUB_LEN, PAYLOAD_HASH_LEN,
     SECP_PUB_LEN,
 };

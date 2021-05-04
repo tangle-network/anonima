@@ -1,5 +1,5 @@
 [package]
-name = "forest_hash_utils"
+name = "anonima_hash_utils"
 description = "Shared hashing utilities used in Ipld Hamt and shared references of it."
 version = "0.1.0"
 license = "MIT OR Apache-2.0"

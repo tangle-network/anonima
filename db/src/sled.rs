@@ -17,7 +17,7 @@ pub struct SledDb {
 ///
 /// Usage:
 /// ```no_run
-/// use forest_db::sled::SledDb;
+/// use anonima_db::sled::SledDb;
 ///
 /// let mut db = SledDb::open("test_db");
 /// ```

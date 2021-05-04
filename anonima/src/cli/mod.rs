@@ -13,7 +13,7 @@ use std::process;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use structopt::StructOpt;
-use forest_libp2p::utils::{read_file_to_string, read_toml};
+use anonima_libp2p::utils::{read_file_to_string, read_toml};
 
 /// CLI structure generated when interacting with Forest binary
 #[derive(StructOpt)]

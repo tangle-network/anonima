@@ -162,7 +162,7 @@ pub mod json {
 
     pub mod vec {
         use super::*;
-        use forest_json_utils::GoVecVisitor;
+        use anonima_json_utils::GoVecVisitor;
         use serde::ser::SerializeSeq;
 
         pub fn serialize<S>(m: &[SignedMessage], serializer: S) -> Result<S::Ok, S::Error>

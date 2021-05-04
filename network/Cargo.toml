@@ -1,5 +1,5 @@
 [package]
-name = "forest_libp2p"
+name = "anonima_libp2p"
 version = "0.1.0"
 authors = ["ChainSafe Systems <info@chainsafe.io>"]
 edition = "2018"
@@ -31,9 +31,9 @@ smallvec = "1.1.0"
 dirs = "3.0"
 toml = "0.5.5"
 
-message = { path = "../message", package = "forest_message" }
-num-bigint = { path = "../utils/bigint", package = "forest_bigint" }
-forest_encoding = { path = "../encoding" }
+message = { path = "../message", package = "anonima_message" }
+num-bigint = { path = "../utils/bigint", package = "anonima_bigint" }
+anonima-encoding = { path = "../encoding" }
 
 async-trait = "0.1"
 lazy_static = "1.4"

@@ -16,7 +16,7 @@ pub struct RocksDb {
 ///
 /// Usage:
 /// ```no_run
-/// use forest_db::rocks::RocksDb;
+/// use anonima_db::rocks::RocksDb;
 ///
 /// let mut db = RocksDb::open("test_db").unwrap();
 /// ```

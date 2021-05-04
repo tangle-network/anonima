@@ -1,7 +1,7 @@
 // Copyright 2020 ChainSafe Systems
 // SPDX-License-Identifier: Apache-2.0, MIT
 
-use forest_db::Store;
+use anonima_db::Store;
 
 pub fn write<DB>(db: &DB)
 where

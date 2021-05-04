@@ -101,15 +101,15 @@ dependencies = [
 name = "anonima"
 version = "0.1.0"
 dependencies = [
+ "anonima-address",
+ "anonima_bigint",
+ "anonima_db",
+ "anonima_libp2p",
  "anyhow",
  "async-log",
  "async-std",
  "ctrlc",
  "env_logger 0.8.3",
- "forest_address 0.3.1",
- "forest_bigint 0.1.4",
- "forest_db",
- "forest_libp2p",
  "futures",
  "jsonrpc-v2",
  "key_management",
@@ -125,6 +125,147 @@ dependencies = [
  "structopt",
  "void",
  "wasm-timer",
+]
+
+[[package]]
+name = "anonima-address"
+version = "0.3.1"
+dependencies = [
+ "anonima-encoding",
+ "anonima_json_utils",
+ "data-encoding",
+ "data-encoding-macro",
+ "leb128",
+ "num-derive",
+ "num-traits",
+ "once_cell",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "anonima-crypto"
+version = "0.5.2"
+dependencies = [
+ "anonima-address",
+ "anonima-encoding",
+ "base64 0.13.0",
+ "bls-signatures",
+ "libsecp256k1",
+ "num-derive",
+ "num-traits",
+ "rand 0.7.3",
+ "rand_chacha 0.2.2",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "anonima-encoding"
+version = "0.2.1"
+dependencies = [
+ "blake2b_simd",
+ "cs_serde_bytes",
+ "cs_serde_cbor",
+ "serde",
+ "serde_repr",
+ "serde_tuple",
+ "thiserror",
+]
+
+[[package]]
+name = "anonima_bigint"
+version = "0.1.4"
+dependencies = [
+ "cs_serde_bytes",
+ "num-bigint 0.3.2",
+ "num-integer",
+ "serde",
+]
+
+[[package]]
+name = "anonima_bitfield"
+version = "0.1.0"
+dependencies = [
+ "ahash 0.6.3",
+ "anonima-encoding",
+ "criterion",
+ "cs_serde_bytes",
+ "rand 0.7.3",
+ "rand_xorshift",
+ "serde",
+ "serde_json",
+ "unsigned-varint 0.6.0",
+]
+
+[[package]]
+name = "anonima_db"
+version = "0.1.0"
+dependencies = [
+ "anonima-encoding",
+ "parking_lot",
+ "rocksdb",
+ "sled",
+ "thiserror",
+]
+
+[[package]]
+name = "anonima_hash_utils"
+version = "0.1.0"
+dependencies = [
+ "cs_serde_bytes",
+ "serde",
+]
+
+[[package]]
+name = "anonima_json_utils"
+version = "0.1.1"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "anonima_libp2p"
+version = "0.1.0"
+dependencies = [
+ "anonima-encoding",
+ "anonima_bigint",
+ "anonima_message",
+ "async-std",
+ "async-trait",
+ "bytes 1.0.1",
+ "dirs",
+ "fnv",
+ "futures",
+ "futures-util",
+ "futures_cbor_codec",
+ "futures_codec",
+ "git-version",
+ "lazy_static",
+ "libp2p",
+ "log",
+ "serde",
+ "smallvec",
+ "toml",
+]
+
+[[package]]
+name = "anonima_message"
+version = "0.7.2"
+dependencies = [
+ "anonima-address",
+ "anonima-crypto",
+ "anonima-encoding",
+ "anonima_bigint",
+ "anonima_json_utils",
+ "base64 0.13.0",
+ "derive_builder",
+ "fil_types",
+ "num-derive",
+ "num-traits",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -854,23 +995,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a81dae078cea95a014a339291cec439d2f232ebe854a9d672b796c6afafa9b7"
 
 [[package]]
-name = "crypto"
-version = "0.5.2"
-dependencies = [
- "base64 0.13.0",
- "bls-signatures",
- "forest_address 0.3.1",
- "forest_encoding 0.2.1",
- "libsecp256k1",
- "num-derive",
- "num-traits",
- "rand 0.7.3",
- "rand_chacha 0.2.2",
- "serde",
- "thiserror",
-]
-
-[[package]]
 name = "crypto-mac"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1287,10 +1411,10 @@ dependencies = [
  "async-std",
  "chrono",
  "fil_clock",
- "forest_address 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "forest_bigint 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "forest_address",
+ "forest_bigint",
  "forest_cid",
- "forest_encoding 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "forest_encoding",
  "forest_vm",
  "git-version",
  "lazy_static",
@@ -1339,44 +1463,18 @@ checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 [[package]]
 name = "forest_address"
 version = "0.3.1"
-dependencies = [
- "data-encoding",
- "data-encoding-macro",
- "forest_encoding 0.2.1",
- "forest_json_utils 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "leb128",
- "num-derive",
- "num-traits",
- "once_cell",
- "serde",
- "thiserror",
-]
-
-[[package]]
-name = "forest_address"
-version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0dd6b3511082cd6d99581720a6af422fd319bf2e8dead77adc5c17b36ad9e6f6"
 dependencies = [
  "data-encoding",
  "data-encoding-macro",
- "forest_encoding 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "forest_json_utils 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "forest_encoding",
+ "forest_json_utils",
  "leb128",
  "num-derive",
  "num-traits",
  "serde",
  "thiserror",
-]
-
-[[package]]
-name = "forest_bigint"
-version = "0.1.4"
-dependencies = [
- "cs_serde_bytes",
- "num-bigint 0.3.2",
- "num-integer",
- "serde",
 ]
 
 [[package]]
@@ -1392,21 +1490,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "forest_bitfield"
-version = "0.1.0"
-dependencies = [
- "ahash 0.6.3",
- "criterion",
- "cs_serde_bytes",
- "forest_encoding 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "rand 0.7.3",
- "rand_xorshift",
- "serde",
- "serde_json",
- "unsigned-varint 0.6.0",
-]
-
-[[package]]
 name = "forest_cid"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1415,53 +1498,12 @@ dependencies = [
  "cid",
  "cs_serde_bytes",
  "cs_serde_cbor",
- "forest_json_utils 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "forest_json_utils",
  "generic-array 0.14.4",
  "integer-encoding",
  "multibase 0.9.1",
  "multihash",
  "serde",
-]
-
-[[package]]
-name = "forest_crypto"
-version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "04c7a0c2a61a9e0fa8c14f0055d890c18c91be632dd5b6106f89d2cad9f8528b"
-dependencies = [
- "base64 0.13.0",
- "bls-signatures",
- "forest_address 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "forest_encoding 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "libsecp256k1",
- "num-derive",
- "num-traits",
- "serde",
- "thiserror",
-]
-
-[[package]]
-name = "forest_db"
-version = "0.1.0"
-dependencies = [
- "forest_encoding 0.2.1",
- "parking_lot",
- "rocksdb",
- "sled",
- "thiserror",
-]
-
-[[package]]
-name = "forest_encoding"
-version = "0.2.1"
-dependencies = [
- "blake2b_simd",
- "cs_serde_bytes",
- "cs_serde_cbor",
- "serde",
- "serde_repr",
- "serde_tuple",
- "thiserror",
 ]
 
 [[package]]
@@ -1481,22 +1523,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "forest_hash_utils"
-version = "0.1.0"
-dependencies = [
- "cs_serde_bytes",
- "serde",
-]
-
-[[package]]
-name = "forest_json_utils"
-version = "0.1.1"
-dependencies = [
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "forest_json_utils"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1506,58 +1532,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "forest_libp2p"
-version = "0.1.0"
-dependencies = [
- "async-std",
- "async-trait",
- "bytes 1.0.1",
- "dirs",
- "fnv",
- "forest_bigint 0.1.4",
- "forest_encoding 0.2.1",
- "forest_message",
- "futures",
- "futures-util",
- "futures_cbor_codec",
- "futures_codec",
- "git-version",
- "lazy_static",
- "libp2p",
- "log",
- "serde",
- "smallvec",
- "toml",
-]
-
-[[package]]
-name = "forest_message"
-version = "0.7.2"
-dependencies = [
- "base64 0.13.0",
- "crypto",
- "derive_builder",
- "fil_types",
- "forest_address 0.3.1",
- "forest_bigint 0.1.4",
- "forest_encoding 0.2.1",
- "forest_json_utils 0.1.1",
- "num-derive",
- "num-traits",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "forest_vm"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ee840f104202f76125e6c01063b1ea05cdcc55e2005dbfffb42012f733b1c092"
 dependencies = [
- "forest_address 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "forest_bigint 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "forest_address",
+ "forest_bigint",
  "forest_cid",
- "forest_encoding 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "forest_encoding",
  "lazy_static",
  "num-derive",
  "num-traits",
@@ -2155,11 +2138,11 @@ dependencies = [
 name = "key_management"
 version = "0.1.0"
 dependencies = [
+ "anonima-address",
+ "anonima-crypto",
+ "anonima-encoding",
  "base64 0.13.0",
  "bls-signatures",
- "forest_address 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "forest_crypto",
- "forest_encoding 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "libsecp256k1",
  "log",
  "rand 0.7.3",
