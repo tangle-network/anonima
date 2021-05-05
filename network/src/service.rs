@@ -36,7 +36,7 @@ pub const PUBSUB_DKG_STR: &str = "/anonima/dkg";
 /// Gossipsub Filecoin messages topic identifier.
 pub const PUBSUB_MSG_STR: &str = "/anonima/msgs";
 
-const PUBSUB_TOPICS: [&str; 2] = [PUBSUB_DKG_STR, PUBSUB_MSG_STR];
+// const PUBSUB_TOPICS: [&str; 2] = [PUBSUB_DKG_STR, PUBSUB_MSG_STR];
 
 /// Events emitted by this Service.
 #[derive(Debug)]
@@ -120,6 +120,12 @@ impl Libp2pService {
         .connection_event_buffer_size(64)
         .build();
 
+        if let Some(addr) = std::env::args().nth(1) {
+            let remote = addr.parse().unwrap();
+            Swarm::dial_addr(&mut swarm, remote).unwrap();
+            println!("Dialed {}", addr);
+        }
+
         Swarm::listen_on(&mut swarm, config.listening_multiaddr).unwrap();
 
         // Bootstrap with Kademlia
@@ -145,8 +151,9 @@ impl Libp2pService {
         let mut swarm_stream = self.swarm.fuse();
         let mut network_stream = self.network_receiver_in.fuse();
         let mut interval = stream::interval(Duration::from_secs(15)).fuse();
-        let pubsub_dkg_str = format!("{}/{}", PUBSUB_DKG_STR, self.network_name);
+        let _pubsub_dkg_str = format!("{}/{}", PUBSUB_DKG_STR, self.network_name);
         let pubsub_msg_str = format!("{}/{}", PUBSUB_MSG_STR, self.network_name);
+        debug!("Looping...");
         loop {
             select! {
                 swarm_event = swarm_stream.next() => match swarm_event {

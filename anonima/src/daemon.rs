@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0, MIT
 
 use super::cli::{block_until_sigint, Config};
-use async_std::{channel::bounded, sync::RwLock, task};
+use async_std::{sync::RwLock, task};
 use libp2p::identity::{ed25519, Keypair};
 use log::{debug, info, trace};
 use rpassword::read_password;
@@ -12,7 +12,7 @@ use std::sync::Arc;
 use anonima_libp2p::utils::write_to_file;
 use wallet::ENCRYPTED_KEYSTORE_NAME;
 use wallet::{KeyStore, KeyStoreConfig};
-use anonima_libp2p::get_keypair;
+use anonima_libp2p::{get_keypair, Libp2pService};
 
 /// Starts daemon process
 pub(super) async fn start(config: Config) {
@@ -78,14 +78,32 @@ pub(super) async fn start(config: Config) {
     #[cfg(feature = "rocksdb")]
     let db = db::rocks::RocksDb::open(config.data_dir + "/db").unwrap();
 
-    let db = Arc::new(db);
+    let _db = Arc::new(db);
+
+    // Block until ctrl-c is hit
+    block_until_sigint().await;
 
     let keystore_write = task::spawn(async move {
         keystore.read().await.flush().unwrap();
     });
 
+        // Libp2p service setup
+    let p2p_service = Libp2pService::new(
+        config.network,
+        net_keypair,
+        &"test".to_owned(),
+    );
+    let _network_rx = p2p_service.network_receiver();
+    let _network_send = p2p_service.network_sender();
+
+    // Start services
+    let p2p_task = task::spawn(async {
+        p2p_service.run().await;
+    });
+
     // Cancel all async services
     keystore_write.await;
+    p2p_task.cancel().await;
 
     info!("Anonima finish shutdown");
 }
