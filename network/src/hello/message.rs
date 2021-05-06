@@ -4,7 +4,7 @@
 use anonima_encoding::tuple::*;
 
 /// Hello message https://filecoin-project.github.io/specs/#hello-spec
-#[derive(Clone, Debug, PartialEq, Serialize_tuple, Deserialize_tuple)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize_tuple, Deserialize_tuple)]
 pub struct HelloRequest {
     marker: core::marker::PhantomData<()>,
 }

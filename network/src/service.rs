@@ -110,7 +110,7 @@ impl Libp2pService {
         .connection_event_buffer_size(64)
         .build();
 
-        if let Some(addr) = std::env::args().nth(1) {
+        if let Some(addr) = Some("/ip4/127.0.0.1/tcp/44655") {
             let remote = addr.parse().unwrap();
             Swarm::dial_addr(&mut swarm, remote).unwrap();
             println!("Dialed {}", addr);
@@ -153,6 +153,11 @@ impl Libp2pService {
                             debug!("Peer connected, {:?}", peer_id);
                             emit_event(&self.network_sender_out,
                                 NetworkEvent::PeerConnected(peer_id)).await;
+                            emit_event(&self.network_sender_out,
+                                NetworkEvent::HelloRequest {
+                                    source: peer_id,
+                                    request: Default::default(),
+                                }).await;
                         }
                         ForestBehaviourEvent::PeerDisconnected(peer_id) => {
                             emit_event(&self.network_sender_out, NetworkEvent::PeerDisconnected(peer_id)).await;
