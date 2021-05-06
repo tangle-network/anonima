@@ -4,7 +4,8 @@
 mod combine;
 
 use combine::{Combine, Cut, Difference, Intersection, SymmetricDifference, Union};
-use std::{iter, ops::Range};
+use std::iter;
+use std::ops::Range;
 
 /// A trait for iterators over `Range<usize>`.
 ///
@@ -13,22 +14,26 @@ use std::{iter, ops::Range};
 /// - the ranges are in ascending order
 /// - no two ranges overlap or touch
 pub trait RangeIterator: Iterator<Item = Range<usize>> + Sized {
-    /// Returns a new `RangeIterator` over the bits that are in `self`, in `other`, or in both.
+    /// Returns a new `RangeIterator` over the bits that are in `self`, in
+    /// `other`, or in both.
     fn union<R: RangeIterator>(self, other: R) -> Combine<Self, R, Union> {
         Combine::new(self, other)
     }
 
-    /// Returns a new `RangeIterator` over the bits that are in both `self` and `other`.
+    /// Returns a new `RangeIterator` over the bits that are in both `self` and
+    /// `other`.
     fn intersection<R: RangeIterator>(self, other: R) -> Combine<Self, R, Intersection> {
         Combine::new(self, other)
     }
 
-    /// Returns a new `RangeIterator` over the bits that are in `self` but not in `other`.
+    /// Returns a new `RangeIterator` over the bits that are in `self` but not
+    /// in `other`.
     fn difference<R: RangeIterator>(self, other: R) -> Combine<Self, R, Difference> {
         Combine::new(self, other)
     }
 
-    /// Returns a new `RangeIterator` over the bits that are in `self` or in `other`, but not in both.
+    /// Returns a new `RangeIterator` over the bits that are in `self` or in
+    /// `other`, but not in both.
     fn symmetric_difference<R: RangeIterator>(
         self,
         other: R,
@@ -36,8 +41,9 @@ pub trait RangeIterator: Iterator<Item = Range<usize>> + Sized {
         Combine::new(self, other)
     }
 
-    /// Returns a new `RangeIterator` over the bits in `self` that remain after "cutting" out the
-    /// bits in `other`, and shifting remaining bits to the left if necessary. For example:
+    /// Returns a new `RangeIterator` over the bits in `self` that remain after
+    /// "cutting" out the bits in `other`, and shifting remaining bits to
+    /// the left if necessary. For example:
     ///
     /// ```ignore
     /// lhs:     xx-xxx--x
@@ -50,7 +56,8 @@ pub trait RangeIterator: Iterator<Item = Range<usize>> + Sized {
         Combine::new(self, other)
     }
 
-    /// Returns a new `RangeIterator` over the bits in `self` after skipping the first `n` bits.
+    /// Returns a new `RangeIterator` over the bits in `self` after skipping the
+    /// first `n` bits.
     fn skip_bits(self, n: usize) -> Skip<Self> {
         Skip {
             iter: self,
@@ -93,7 +100,8 @@ impl<I: RangeIterator> Iterator for Skip<I> {
 
 impl<I: RangeIterator> RangeIterator for Skip<I> {}
 
-/// A `RangeIterator` that iterates over the first `n` bits of antoher `RangeIterator`.
+/// A `RangeIterator` that iterates over the first `n` bits of antoher
+/// `RangeIterator`.
 pub struct Take<I> {
     iter: I,
     take: usize,
@@ -120,8 +128,9 @@ impl<I: RangeIterator> Iterator for Take<I> {
 
 impl<I: RangeIterator> RangeIterator for Take<I> {}
 
-/// A `RangeIterator` that wraps a regular iterator over `Range<usize>` as a way to explicitly
-/// indicate that this iterator satisfies the requirements of the `RangeIterator` trait.
+/// A `RangeIterator` that wraps a regular iterator over `Range<usize>` as a way
+/// to explicitly indicate that this iterator satisfies the requirements of the
+/// `RangeIterator` trait.
 pub struct Ranges<I>(I);
 
 impl<I> Ranges<I>
@@ -150,9 +159,9 @@ where
 
 impl<I> RangeIterator for Ranges<I> where I: Iterator<Item = Range<usize>> {}
 
-/// Returns a `RangeIterator` which ranges contain the values from the provided iterator.
-/// The values need to be in ascending order — if not, the returned iterator may not satisfy
-/// all `RangeIterator` requirements.
+/// Returns a `RangeIterator` which ranges contain the values from the provided
+/// iterator. The values need to be in ascending order — if not, the returned
+/// iterator may not satisfy all `RangeIterator` requirements.
 pub fn ranges_from_bits(bits: impl IntoIterator<Item = usize>) -> impl RangeIterator {
     let mut iter = bits.into_iter().peekable();
 

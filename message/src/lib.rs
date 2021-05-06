@@ -4,21 +4,22 @@
 // workaround for a compiler bug, see https://github.com/rust-lang/rust/issues/55779
 extern crate serde;
 
+pub mod exit_code;
 pub mod message_receipt;
+pub mod method;
 pub mod signed_message;
 pub mod unsigned_message;
-pub mod method;
-pub mod exit_code;
 
 pub use exit_code::*;
-pub use method::*;
 pub use message_receipt::MessageReceipt;
+pub use method::*;
 pub use signed_message::SignedMessage;
 pub use unsigned_message::UnsignedMessage;
 
 use address::Address;
 
-/// Message interface to interact with Signed and unsigned messages in a generic context.
+/// Message interface to interact with Signed and unsigned messages in a generic
+/// context.
 pub trait Message {
     /// Returns the from address of the message.
     fn from(&self) -> &Address;

@@ -6,14 +6,13 @@ mod config;
 
 pub use self::config::Config;
 
+use anonima_libp2p::utils::{read_file_to_string, read_toml};
 use jsonrpc_v2::Error as JsonRpcError;
 use std::cell::RefCell;
-use std::io;
-use std::process;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::{io, process};
 use structopt::StructOpt;
-use anonima_libp2p::utils::{read_file_to_string, read_toml};
 
 /// CLI structure generated when interacting with Forest binary
 #[derive(StructOpt)]

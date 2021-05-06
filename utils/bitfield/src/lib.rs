@@ -9,15 +9,16 @@ pub use unvalidated::{UnvalidatedBitField, Validate};
 
 use ahash::AHashSet;
 use iter::{ranges_from_bits, RangeIterator};
-use std::{
-    iter::FromIterator,
-    ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Range, Sub, SubAssign},
+use std::iter::FromIterator;
+use std::ops::{
+    BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Range, Sub, SubAssign,
 };
 
 type Result<T> = std::result::Result<T, &'static str>;
 
-/// A bit field with buffered insertion/removal that serializes to/from RLE+. Similar to
-/// `HashSet<usize>`, but more memory-efficient when long runs of 1s and 0s are present.
+/// A bit field with buffered insertion/removal that serializes to/from RLE+.
+/// Similar to `HashSet<usize>`, but more memory-efficient when long runs of 1s
+/// and 0s are present.
 #[derive(Debug, Default, Clone)]
 pub struct BitField {
     /// The underlying ranges of 1s.
@@ -129,18 +130,20 @@ impl BitField {
 
     /// Returns an iterator over the indices of the bit field's set bits.
     pub fn iter(&self) -> impl Iterator<Item = usize> + '_ {
-        // this code results in the same values as `self.ranges().flatten()`, but there's
-        // a key difference:
+        // this code results in the same values as `self.ranges().flatten()`, but
+        // there's a key difference:
         //
-        // `ranges()` needs to traverse both `self.set` and `self.unset` up front (so before
-        // iteration starts) in order to not have to visit each individual bit of `self.bitvec`
-        // during iteration, while here we can get away with only traversing `self.set` up
-        // front and checking `self.unset` containment for the candidate bits on the fly
+        // `ranges()` needs to traverse both `self.set` and `self.unset` up front (so
+        // before iteration starts) in order to not have to visit each
+        // individual bit of `self.bitvec` during iteration, while here we can
+        // get away with only traversing `self.set` up front and checking
+        // `self.unset` containment for the candidate bits on the fly
         // because we're visiting all bits either way
         //
-        // consequently, the time complexity of `self.first()` is only linear in the length of
-        // `self.set`, not in the length of `self.unset` (as opposed to getting the first range
-        // with `self.ranges().next()` which is linear in both)
+        // consequently, the time complexity of `self.first()` is only linear in the
+        // length of `self.set`, not in the length of `self.unset` (as opposed
+        // to getting the first range with `self.ranges().next()` which is
+        // linear in both)
 
         let mut set_bits: Vec<_> = self.set.iter().copied().collect();
         set_bits.sort_unstable();
@@ -151,8 +154,9 @@ impl BitField {
             .filter(move |i| !self.unset.contains(i))
     }
 
-    /// Returns an iterator over the indices of the bit field's set bits if the number
-    /// of set bits in the bit field does not exceed `max`. Returns an error otherwise.
+    /// Returns an iterator over the indices of the bit field's set bits if the
+    /// number of set bits in the bit field does not exceed `max`. Returns
+    /// an error otherwise.
     pub fn bounded_iter(&self, max: usize) -> Result<impl Iterator<Item = usize> + '_> {
         if self.len() <= max {
             Ok(self.iter())
@@ -166,8 +170,9 @@ impl BitField {
         iter::Ranges::new(self.ranges.iter().cloned())
     }
 
-    /// Returns an iterator over the ranges of set bits that make up the bit field. The
-    /// ranges are in ascending order, are non-empty, and don't overlap.
+    /// Returns an iterator over the ranges of set bits that make up the bit
+    /// field. The ranges are in ascending order, are non-empty, and don't
+    /// overlap.
     pub fn ranges(&self) -> impl RangeIterator + '_ {
         let ranges = |set: &AHashSet<usize>| {
             let mut vec: Vec<_> = set.iter().copied().collect();

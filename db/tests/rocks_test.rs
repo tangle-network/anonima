@@ -6,8 +6,8 @@
 mod db_utils;
 mod subtests;
 
-use db_utils::DBPath;
 use anonima_db::rocks::RocksDb;
+use db_utils::DBPath;
 
 #[test]
 fn rocks_db_write() {

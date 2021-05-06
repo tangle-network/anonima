@@ -10,10 +10,10 @@ mod behaviour;
 mod config;
 mod discovery;
 mod gossip_params;
-pub mod utils;
 pub mod hello;
 pub mod rpc;
 mod service;
+pub mod utils;
 
 pub(crate) use self::behaviour::*;
 pub use self::config::*;

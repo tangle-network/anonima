@@ -10,8 +10,6 @@ async fn main() {
     logger::setup_logger();
     // Capture CLI inputs
     match CLI::from_args() {
-        CLI {
-            daemon_opts,
-        } => daemon::start(daemon_opts.to_config().unwrap()).await,
+        CLI { daemon_opts } => daemon::start(daemon_opts.to_config().unwrap()).await,
     }
 }

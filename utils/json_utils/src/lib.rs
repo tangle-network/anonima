@@ -6,8 +6,9 @@ use serde::Deserialize;
 use std::fmt;
 use std::marker::PhantomData;
 
-/// Helper visitor to match Go's default behaviour of serializing uninitialized slices as null.
-/// This will be able to deserialize null as empty Vectors of the type.
+/// Helper visitor to match Go's default behaviour of serializing uninitialized
+/// slices as null. This will be able to deserialize null as empty Vectors of
+/// the type.
 ///
 /// T indicates the return type, and D is an optional generic to override the
 #[derive(Default)]
@@ -46,12 +47,14 @@ where
         }
         Ok(vec)
     }
+
     fn visit_none<E>(self) -> Result<Self::Value, E>
     where
         E: de::Error,
     {
         Ok(Vec::new())
     }
+
     fn visit_unit<E>(self) -> Result<Self::Value, E>
     where
         E: de::Error,
@@ -88,8 +91,7 @@ pub mod go_vec_visitor {
 
 #[cfg(test)]
 mod tests {
-    use super::go_vec_visitor;
-    use super::*;
+    use super::{go_vec_visitor, *};
     use serde::{Deserialize, Deserializer};
     use serde_json::from_str;
 
@@ -154,10 +156,10 @@ mod tests {
 
         let with_values = r#"[1, 2]"#;
         let BasicJson(deserialized) = from_str(with_values).unwrap();
-        assert_eq!(
-            deserialized,
-            [TestOther("1".to_owned()), TestOther("2".to_owned())]
-        );
+        assert_eq!(deserialized, [
+            TestOther("1".to_owned()),
+            TestOther("2".to_owned())
+        ]);
     }
 
     #[test]

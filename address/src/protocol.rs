@@ -3,9 +3,8 @@
 
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
-use std::fmt;
 use std::hash::Hash;
-use std::u64;
+use std::{fmt, u64};
 
 /// Protocol defines the addressing protocol used to derive data to an address
 #[derive(PartialEq, Eq, Copy, Clone, FromPrimitive, Debug, Hash)]

@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0, MIT
 
 use serde_cbor::error::Error as CborError;
-use std::fmt;
-use std::io;
+use std::{fmt, io};
 use thiserror::Error;
 
-/// Error type for encoding and decoding data through any Forest supported protocol.
+/// Error type for encoding and decoding data through any Forest supported
+/// protocol.
 ///
 /// This error will provide any details about the data which was attempted to be
 /// encoded or decoded.
@@ -34,8 +34,8 @@ impl From<Error> for io::Error {
 
 /// CodecProtocol defines the protocol in which the data is encoded or decoded
 ///
-/// This is used with the encoding errors, to detail the encoding protocol or any other
-/// information about how the data was encoded or decoded
+/// This is used with the encoding errors, to detail the encoding protocol or
+/// any other information about how the data was encoded or decoded
 #[derive(Debug, PartialEq)]
 pub enum CodecProtocol {
     Cbor,

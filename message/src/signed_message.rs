@@ -1,9 +1,8 @@
 // Copyright 2020 ChainSafe Systems
 // SPDX-License-Identifier: Apache-2.0, MIT
 
-use crate::MethodNum;
-use crate::Serialized;
 use super::{Message, UnsignedMessage};
+use crate::{MethodNum, Serialized};
 use address::Address;
 use crypto::{Error as CryptoError, Signature, SignatureType, Signer};
 use encoding::tuple::*;
@@ -71,12 +70,15 @@ impl Message for SignedMessage {
     fn from(&self) -> &Address {
         self.message.from()
     }
+
     fn to(&self) -> &Address {
         self.message.to()
     }
+
     fn method_num(&self) -> MethodNum {
         self.message.method_num()
     }
+
     fn params(&self) -> &Serialized {
         self.message.params()
     }

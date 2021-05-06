@@ -3,14 +3,14 @@
 
 use super::{from_leb_bytes, to_leb_bytes, Error, Protocol, BLS_PUB_LEN, PAYLOAD_HASH_LEN};
 use std::convert::TryInto;
-use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::ops::Deref;
-use std::u64;
+use std::{fmt, u64};
 
 /// Public key struct used as BLS Address data.
-/// This type is only needed to be able to implement traits on it due to limitations on
-/// arrays within Rust that are greater than 32 length. Can be dereferenced into `[u8; 48]`.
+/// This type is only needed to be able to implement traits on it due to
+/// limitations on arrays within Rust that are greater than 32 length. Can be
+/// dereferenced into `[u8; 48]`.
 #[derive(Copy, Clone)]
 pub struct BLSPublicKey(pub [u8; BLS_PUB_LEN]);
 
@@ -41,12 +41,14 @@ impl From<[u8; BLS_PUB_LEN]> for BLSPublicKey {
 
 impl Deref for BLSPublicKey {
     type Target = [u8; BLS_PUB_LEN];
+
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-/// Payload is the data of the Address. Variants are the supported Address protocols.
+/// Payload is the data of the Address. Variants are the supported Address
+/// protocols.
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
 pub enum Payload {
     /// ID protocol address.
