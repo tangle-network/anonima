@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0, MIT
 
 mod bytes;
+mod cbor;
 mod errors;
 mod hash;
-mod cbor;
 
 pub use serde::{de, ser};
 pub use serde_bytes;

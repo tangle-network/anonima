@@ -3,11 +3,13 @@
 
 use dirs::home_dir;
 use std::fs::{create_dir_all, File};
-use std::io::{prelude::*, Result};
+use std::io::prelude::*;
+use std::io::Result;
 use std::path::Path;
 
-/// Writes a string to a specified file. Creates the desired path if it does not exist.
-/// Note: `path` and `filename` are appended to produce the resulting file path.
+/// Writes a string to a specified file. Creates the desired path if it does not
+/// exist. Note: `path` and `filename` are appended to produce the resulting
+/// file path.
 pub fn write_to_file(message: &[u8], path: &str, file_name: &str) -> Result<()> {
     // Create path if it doesn't exist
     create_dir_all(Path::new(path))?;
@@ -51,7 +53,7 @@ pub fn get_home_dir() -> String {
 ///
 /// #[derive(Deserialize)]
 /// struct Config {
-///     name: String
+///     name: String,
 /// };
 ///
 /// let toml_string = "name = \"forest\"\n";

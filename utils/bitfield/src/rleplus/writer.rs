@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0, MIT
 
 #[derive(Default, Clone, Debug)]
-/// A `BitWriter` allows for efficiently writing bits to a byte buffer, up to a byte at a time.
+/// A `BitWriter` allows for efficiently writing bits to a byte buffer, up to a
+/// byte at a time.
 pub struct BitWriter {
     /// The buffer that is written to.
     bytes: Vec<u8>,
-    /// The most recently written bits. Whenever this exceeds 8 bits, one byte is written to `bytes`.
+    /// The most recently written bits. Whenever this exceeds 8 bits, one byte
+    /// is written to `bytes`.
     bits: u16,
     /// The number of bits currently stored in `bits`.
     num_bits: u32,
@@ -62,8 +64,8 @@ impl BitWriter {
             self.bytes.push(self.bits as u8);
         }
 
-        // This check should not be necessary, but as a sanity check to make sure 0 bytes
-        // aren't added at the end of the bytes
+        // This check should not be necessary, but as a sanity check to make sure 0
+        // bytes aren't added at the end of the bytes
         while let Some(0) = self.bytes.last() {
             self.bytes.pop();
         }
@@ -97,10 +99,11 @@ mod tests {
         //                                                     ^^
 
         writer.write(0b0000_0110, 3);
-        assert_eq!(
-            writer.clone().finish(),
-            &[0b0000_0000, 0b1011_0001, 0b0000_0001]
-        ); //                ^^                   ^
+        assert_eq!(writer.clone().finish(), &[
+            0b0000_0000,
+            0b1011_0001,
+            0b0000_0001
+        ]); //                ^^                   ^
 
         writer.write(0b0111_0100, 8);
         assert_eq!(writer.finish(), &[0b0000_0000, 0b1011_0001, 0b1110_1001]);
@@ -124,23 +127,21 @@ mod tests {
         //                                      ^               ^ ^^^^
 
         writer.write_len(15); // prefix: 01, value: 1111
-        assert_eq!(
-            writer.clone().finish(),
-            &[0b0001_0101, 0b1101_0111, 0b0000_0111]
-        ); //                ^^^                ^^^
+        assert_eq!(writer.clone().finish(), &[
+            0b0001_0101,
+            0b1101_0111,
+            0b0000_0111
+        ]); //                ^^^                ^^^
 
         writer.write_len(147); // prefix: 00, value: 11001001 10000000
-        assert_eq!(
-            writer.finish(),
-            &[
-                0b0001_0101,
-                0b1101_0111,
-                0b0110_0111,
-                //^^^^ ^
-                0b0011_0010,
-                //^^^^ ^^^^
-            ]
-        );
+        assert_eq!(writer.finish(), &[
+            0b0001_0101,
+            0b1101_0111,
+            0b0110_0111,
+            //^^^^ ^
+            0b0011_0010,
+            //^^^^ ^^^^
+        ]);
     }
 
     #[cfg(debug_assertions)]

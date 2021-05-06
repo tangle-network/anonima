@@ -1,8 +1,7 @@
 // Copyright 2020 ChainSafe Systems
 // SPDX-License-Identifier: Apache-2.0, MIT
 
-use crate::ExitCode;
-use crate::Serialized;
+use crate::{ExitCode, Serialized};
 use encoding::tuple::*;
 
 /// Result of a state transition from a message

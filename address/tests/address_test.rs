@@ -1,12 +1,12 @@
 // Copyright 2020 ChainSafe Systems
 // SPDX-License-Identifier: Apache-2.0, MIT
 
-use data_encoding::{DecodeError, DecodeKind};
-use encoding::{from_slice, Cbor};
 use anonima_address::{
     checksum, validate_checksum, Address, Error, Network, Protocol, BLS_PUB_LEN, PAYLOAD_HASH_LEN,
     SECP_PUB_LEN,
 };
+use data_encoding::{DecodeError, DecodeKind};
+use encoding::{from_slice, Cbor};
 use std::str::FromStr;
 
 #[test]
@@ -15,7 +15,8 @@ fn bytes() {
     let new_addr = Address::new_secp256k1(&data).unwrap();
     let encoded_bz = new_addr.to_bytes();
 
-    // Assert decoded address equals the original address and a new one with the same data
+    // Assert decoded address equals the original address and a new one with the
+    // same data
     let decoded_addr = Address::from_bytes(&encoded_bz).unwrap();
     assert!(decoded_addr == new_addr);
     assert!(decoded_addr == Address::new_secp256k1(&data).unwrap());

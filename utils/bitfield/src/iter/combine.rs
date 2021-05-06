@@ -10,8 +10,9 @@
 //!
 //! The `Combine` iterator works at follows:
 //! 1. it inspects the first range of each of the two input ranges
-//! 2. it asks the corresponding combinator how these two ranges should be combined
-//! 3. it discards the range with the lowest upper bound, and goes back to step 1
+//! 2. it asks the corresponding combinator how these two ranges should be
+//! combined 3. it discards the range with the lowest upper bound, and goes back
+//! to step 1
 //!
 //! For example, given the iterators over the following ranges:
 //!
@@ -21,7 +22,8 @@
 //! ```
 //!
 //! First `-xx---` and `xxxxx-` are passed to the combinator. Then `-xx---` is
-//! discarded because it has the lowest upper bound, after which we are left with
+//! discarded because it has the lowest upper bound, after which we are left
+//! with
 //!
 //! ```ignore
 //! lhs: ----xx
@@ -29,8 +31,8 @@
 //! ```
 //!
 //! Now `----xx` and `xxxxx-` are passed to the combinator. Finally, `xxxxx-` is
-//! discarded, and the only remaining range `----xx` is passed to the combinator as
-//! well.
+//! discarded, and the only remaining range `----xx` is passed to the combinator
+//! as well.
 //!
 //! It is up to the specific combinator to decide which ranges to produce. For
 //! example, the `Intersection` combinator would produce the following outputs
@@ -42,17 +44,20 @@
 //! ----xx
 //! ```
 //!
-//! These ranges are combined into a proper range iterator by merging overlapping
-//! ranges.
+//! These ranges are combined into a proper range iterator by merging
+//! overlapping ranges.
 
 use super::RangeIterator;
-use std::{cmp, iter, ops::Range};
+use std::ops::Range;
+use std::{cmp, iter};
 
-/// A trait for defining how two range iterators can be combined into a single new range iterator.
+/// A trait for defining how two range iterators can be combined into a single
+/// new range iterator.
 ///
-/// When returning a range, it is required that the lower bound of that range isn't smaller than
-/// any previously returned range. The logic for stitching overlapping ranges together relies on
-/// the lower bounds of the returned ranges to form a monotonically increasing sequence.
+/// When returning a range, it is required that the lower bound of that range
+/// isn't smaller than any previously returned range. The logic for stitching
+/// overlapping ranges together relies on the lower bounds of the returned
+/// ranges to form a monotonically increasing sequence.
 pub trait Combinator: Default {
     /// Produces an output range for the two given input ranges.
     ///
@@ -79,14 +84,15 @@ pub trait Combinator: Default {
 
 /// The union combinator.
 ///
-/// Produces ranges over the bits that are in one or both of the input range iterators.
+/// Produces ranges over the bits that are in one or both of the input range
+/// iterators.
 #[derive(Default)]
 pub struct Union;
 
 impl Combinator for Union {
     fn advance_lhs(&mut self, lhs: Range<usize>, rhs: &mut Range<usize>) -> Range<usize> {
-        // the returned range needs to start from the minimum lower bound of the two ranges,
-        // to ensure that the lower bounds are monotonically increasing
+        // the returned range needs to start from the minimum lower bound of the two
+        // ranges, to ensure that the lower bounds are monotonically increasing
         //
         // e.g. `--xx--`, `xxxxxx` should first produce
         // `xxxx--` and then `xxxxxx`, not
@@ -144,7 +150,8 @@ impl Combinator for Intersection {
 
 /// The difference combinator.
 ///
-/// Produces ranges over the bits that are in the `lhs` range iterator, but not in the `rhs`.
+/// Produces ranges over the bits that are in the `lhs` range iterator, but not
+/// in the `rhs`.
 #[derive(Default)]
 pub struct Difference;
 
@@ -188,13 +195,15 @@ impl Combinator for Difference {
 
 /// The symmetric difference combinator.
 ///
-/// Produces ranges over the bits that are in one of the input range iterators, but not in both.
+/// Produces ranges over the bits that are in one of the input range iterators,
+/// but not in both.
 #[derive(Default)]
 pub struct SymmetricDifference;
 
 impl SymmetricDifference {
-    /// Returns the symmetric difference of the two ranges where `left.end <= right.end`.
-    /// Adjusts `rhs` to not return invalid bits in the next iteration.
+    /// Returns the symmetric difference of the two ranges where `left.end <=
+    /// right.end`. Adjusts `rhs` to not return invalid bits in the next
+    /// iteration.
     fn advance(left: Range<usize>, right: &mut Range<usize>) -> Range<usize> {
         if left.start <= right.start {
             // left:       xxxx--      xx----
@@ -239,12 +248,12 @@ impl Combinator for SymmetricDifference {
 
 /// The cut combinator.
 ///
-/// Produces ranges over the bits that remain after cutting the set bits of the `rhs`
-/// out of the `lhs`, and shifting bits to the left to fill those gaps.
+/// Produces ranges over the bits that remain after cutting the set bits of the
+/// `rhs` out of the `lhs`, and shifting bits to the left to fill those gaps.
 #[derive(Default)]
 pub struct Cut {
-    /// Stores the number of bits that have been cut out so far, i.e. the number of bits
-    /// each output range needs to be shifted to the left by.
+    /// Stores the number of bits that have been cut out so far, i.e. the number
+    /// of bits each output range needs to be shifted to the left by.
     offset: usize,
 }
 
@@ -257,7 +266,8 @@ impl Cut {
 
 impl Combinator for Cut {
     fn advance_lhs(&mut self, lhs: Range<usize>, rhs: &mut Range<usize>) -> Range<usize> {
-        // apart from the offset, these implementations are identical to those of the `Difference` combinator
+        // apart from the offset, these implementations are identical to those of the
+        // `Difference` combinator
         self.offset(lhs.start..cmp::min(lhs.end, rhs.start))
     }
 
@@ -318,8 +328,8 @@ where
 }
 
 /// Combines two range iterators according to the given combinator, but does not
-/// merge the output ranges together. Since the ranges can overlap, this does not
-/// satisfy the `RangeIterator` requirements.
+/// merge the output ranges together. Since the ranges can overlap, this does
+/// not satisfy the `RangeIterator` requirements.
 struct _Combine<A, B, C>
 where
     A: RangeIterator,
@@ -344,9 +354,10 @@ where
         }
     }
 
-    /// Computes the next range by inspecting the next range of each of the input
-    /// range iterators and passing them to the combinator. Also advances the range
-    /// iterator which corresponding range has the lowest upper bound.
+    /// Computes the next range by inspecting the next range of each of the
+    /// input range iterators and passing them to the combinator. Also
+    /// advances the range iterator which corresponding range has the lowest
+    /// upper bound.
     fn next_range(&mut self) -> Option<Range<usize>> {
         let (range, advance_lhs) = match (self.lhs.peek(), self.rhs.peek()) {
             (Some(lhs), Some(rhs)) => {
@@ -409,8 +420,8 @@ where
 /// ```
 ///
 /// Since this is done lazily, it's required that the ranges of the underlying
-/// iterator increase monotonically (i.e. are non-decreasing) in their lower bound.
-/// Also requires that the underlying ranges are non-empty.
+/// iterator increase monotonically (i.e. are non-decreasing) in their lower
+/// bound. Also requires that the underlying ranges are non-empty.
 struct Merge<I: Iterator> {
     iter: Lookahead<I>,
 }
@@ -452,10 +463,11 @@ where
 
 impl<I> RangeIterator for Merge<I> where I: Iterator<Item = Range<usize>> {}
 
-/// An iterator wrapper that stores (and gives mutable access to) the next item of the iterator.
+/// An iterator wrapper that stores (and gives mutable access to) the next item
+/// of the iterator.
 ///
-/// Similar to `std::iter::Peekable`, but unlike `Peekable`, `Lookahead` stores the next item
-/// unconditionally (if there is any).
+/// Similar to `std::iter::Peekable`, but unlike `Peekable`, `Lookahead` stores
+/// the next item unconditionally (if there is any).
 struct Lookahead<I: Iterator> {
     iter: I,
     next: Option<I::Item>,
@@ -476,7 +488,8 @@ impl<I: Iterator> Iterator for Lookahead<I> {
     type Item = I::Item;
 
     fn next(&mut self) -> Option<Self::Item> {
-        // `self.next` always stores the next element, so if it is `None`, the iterator is empty
+        // `self.next` always stores the next element, so if it is `None`, the iterator
+        // is empty
         let next = self.next.take()?;
         self.next = self.iter.next();
         Some(next)

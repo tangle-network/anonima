@@ -1,13 +1,13 @@
 // Copyright 2020 ChainSafe Systems
 // SPDX-License-Identifier: Apache-2.0, MIT
 
-use crypto::{Signature, Signer};
 use anonima_address::Address;
 use anonima_blocks::{Block, BlockHeader, FullTipset};
 use anonima_libp2p::chain_exchange::{
     ChainExchangeResponse, ChainExchangeResponseStatus, CompactedMessages, TipsetBundle,
 };
 use anonima_message::{SignedMessage, UnsignedMessage};
+use crypto::{Signature, Signer};
 use num_bigint::BigInt;
 use std::convert::TryFrom;
 use std::error::Error;
@@ -127,7 +127,8 @@ fn tipset_bundle_to_full_tipset() {
     );
 
     if let Some(m) = tsb.messages.as_mut() {
-        // Invalidate tipset bundle by not having includes same length as number of blocks
+        // Invalidate tipset bundle by not having includes same length as number of
+        // blocks
         m.secp_msg_includes = vec![vec![0]];
     }
     assert!(

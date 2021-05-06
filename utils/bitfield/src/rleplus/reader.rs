@@ -6,12 +6,14 @@ use super::Result;
 // https://github.com/multiformats/unsigned-varint#practical-maximum-of-9-bytes-for-security
 const VARINT_MAX_BYTES: usize = 9;
 
-/// A `BitReader` allows for efficiently reading bits from a byte buffer, up to a byte at a time.
+/// A `BitReader` allows for efficiently reading bits from a byte buffer, up to
+/// a byte at a time.
 ///
-/// It works by always storing at least the next 8 bits in `bits`, which lets us conveniently
-/// and efficiently read bits that cross a byte boundary. It's filled with the bits from `next_byte`
-/// after every read operation, which is in turn replaced by the next byte from `bytes` as soon
-/// as the next read might read bits from `next_byte`.
+/// It works by always storing at least the next 8 bits in `bits`, which lets us
+/// conveniently and efficiently read bits that cross a byte boundary. It's
+/// filled with the bits from `next_byte` after every read operation, which is
+/// in turn replaced by the next byte from `bytes` as soon as the next read
+/// might read bits from `next_byte`.
 pub struct BitReader<'a> {
     /// The bytes that have not been read from yet.
     bytes: &'a [u8],
@@ -19,7 +21,8 @@ pub struct BitReader<'a> {
     next_byte: u8,
     /// The next bits to be read.
     bits: u16,
-    /// The number of bits in `bits` from bytes that came before `next_byte` (at least 8, at most 15).
+    /// The number of bits in `bits` from bytes that came before `next_byte` (at
+    /// least 8, at most 15).
     num_bits: u32,
 }
 

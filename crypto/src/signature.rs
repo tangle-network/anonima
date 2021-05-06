@@ -6,7 +6,8 @@ use address::{Address, Protocol};
 use bls_signatures::{
     verify_messages, PublicKey as BlsPubKey, Serialize, Signature as BlsSignature,
 };
-use encoding::{blake2b_256, de, repr::*, ser, serde_bytes};
+use encoding::repr::*;
+use encoding::{blake2b_256, de, ser, serde_bytes};
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 use secp256k1::{recover, Message, RecoveryId, Signature as EcsdaSignature};

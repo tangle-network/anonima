@@ -2,17 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0, MIT
 
 use super::cli::{block_until_sigint, Config};
-use async_std::{sync::RwLock, task};
+use anonima_libp2p::utils::write_to_file;
+use anonima_libp2p::{get_keypair, Libp2pService};
+use async_std::sync::RwLock;
+use async_std::task;
 use libp2p::identity::{ed25519, Keypair};
 use log::{info, trace};
 use rpassword::read_password;
 use std::io::prelude::*;
 use std::path::PathBuf;
 use std::sync::Arc;
-use anonima_libp2p::utils::write_to_file;
-use wallet::ENCRYPTED_KEYSTORE_NAME;
-use wallet::{KeyStore, KeyStoreConfig};
-use anonima_libp2p::{get_keypair, Libp2pService};
+use wallet::{KeyStore, KeyStoreConfig, ENCRYPTED_KEYSTORE_NAME};
 
 /// Starts daemon process
 pub(super) async fn start(config: Config) {
@@ -81,20 +81,16 @@ pub(super) async fn start(config: Config) {
     let _db = Arc::new(db);
 
     // Libp2p service setup
-    let p2p_service = Libp2pService::new(
-        config.network,
-        net_keypair,
-        &"test".to_owned(),
-    );
+    let p2p_service = Libp2pService::new(config.network, net_keypair, &"test".to_owned());
 
     // Start services
     let p2p_task = task::spawn(async {
         p2p_service.run().await;
     });
-
+    info!("Task is running ..");
     // Block until ctrl-c is hit
-    block_until_sigint().await;
-
+    // block_until_sigint().await;
+    let () = futures::future::pending().await;
     let keystore_write = task::spawn(async move {
         keystore.read().await.flush().unwrap();
     });

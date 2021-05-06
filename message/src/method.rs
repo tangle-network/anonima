@@ -26,6 +26,7 @@ impl Cbor for Serialized {}
 
 impl Deref for Serialized {
     type Target = Vec<u8>;
+
     fn deref(&self) -> &Self::Target {
         &self.bytes
     }

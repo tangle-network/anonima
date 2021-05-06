@@ -1,35 +1,29 @@
 // Copyright 2020 ChainSafe Systems
 // SPDX-License-Identifier: Apache-2.0, MIT
 
-use anonima_encoding::from_slice;
 use super::{ForestBehaviour, ForestBehaviourEvent, Libp2pConfig};
-use crate::{
-    hello::{HelloRequest, HelloResponse},
-    rpc::RequestResponseError,
-};
+use crate::hello::{HelloRequest, HelloResponse};
+use crate::rpc::RequestResponseError;
+use anonima_encoding::from_slice;
 use async_std::channel::{unbounded, Receiver, Sender};
-use async_std::{stream};
+use async_std::stream;
 use futures::channel::oneshot::Sender as OneShotSender;
 use futures::select;
 use futures_util::stream::StreamExt;
-pub use libp2p::gossipsub::IdentTopic;
-pub use libp2p::gossipsub::Topic;
+pub use libp2p::gossipsub::{IdentTopic, Topic};
 use message::SignedMessage;
 
-use libp2p::{
-    core,
-    core::connection::ConnectionLimits,
-    core::muxing::StreamMuxerBox,
-    core::transport::Boxed,
-    identity::{ed25519, Keypair},
-    mplex, noise, yamux, PeerId, Swarm, Transport,
-};
-use libp2p::{core::Multiaddr, swarm::SwarmBuilder};
+use libp2p::core::connection::ConnectionLimits;
+use libp2p::core::muxing::StreamMuxerBox;
+use libp2p::core::transport::Boxed;
+use libp2p::core::Multiaddr;
+use libp2p::identity::{ed25519, Keypair};
+use libp2p::swarm::SwarmBuilder;
+use libp2p::{core, mplex, noise, yamux, PeerId, Swarm, Transport};
 use log::{debug, error, info, trace, warn};
 
-
-use std::time::Duration;
 use crate::utils::read_file_to_vec;
+use std::time::Duration;
 
 /// Gossipsub Filecoin blocks topic identifier.
 pub const PUBSUB_DKG_STR: &str = "/anonima/dkg";
@@ -66,7 +60,7 @@ pub enum NetworkMessage {
     PubsubMessage {
         topic: IdentTopic,
         message: Vec<u8>,
-    },    
+    },
     HelloRequest {
         peer_id: PeerId,
         request: HelloRequest,
@@ -94,11 +88,7 @@ pub struct Libp2pService {
 }
 
 impl Libp2pService {
-    pub fn new(
-        config: Libp2pConfig,
-        net_keypair: Keypair,
-        network_name: &str,
-    ) -> Self {
+    pub fn new(config: Libp2pConfig, net_keypair: Keypair, network_name: &str) -> Self {
         let peer_id = PeerId::from(net_keypair.public());
 
         let transport = build_transport(net_keypair.clone());
@@ -146,7 +136,8 @@ impl Libp2pService {
         }
     }
 
-    /// Starts the libp2p service networking stack. This Future resolves when shutdown occurs.
+    /// Starts the libp2p service networking stack. This Future resolves when
+    /// shutdown occurs.
     pub async fn run(self) {
         let mut swarm_stream = self.swarm.fuse();
         let mut network_stream = self.network_receiver_in.fuse();
@@ -154,7 +145,8 @@ impl Libp2pService {
         let _pubsub_dkg_str = format!("{}/{}", PUBSUB_DKG_STR, self.network_name);
         let pubsub_msg_str = format!("{}/{}", PUBSUB_MSG_STR, self.network_name);
         loop {
-            select! {
+            trace!("Looping ...");
+            futures::select! {
                 swarm_event = swarm_stream.next() => match swarm_event {
                     // outbound events
                     Some(event) => match event {

@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0, MIT
 
 use address::Address;
-use crypto::{Signature, Signer};
 use anonima_message::{Message, SignedMessage, UnsignedMessage};
+use crypto::{Signature, Signer};
 use std::error::Error;
 use vm::{MethodNum, Serialized, TokenAmount};
 

@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0, MIT
 
 use super::errors::Error;
-use crate::{de::DeserializeOwned, from_slice, ser::Serialize, to_vec};
+use crate::de::DeserializeOwned;
+use crate::ser::Serialize;
+use crate::{from_slice, to_vec};
 
 /// Cbor utility functions for serializable objects
 pub trait Cbor: Serialize + DeserializeOwned {

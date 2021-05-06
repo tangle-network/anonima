@@ -18,11 +18,11 @@ use crypto::SignatureType;
 pub const KEYSTORE_NAME: &str = "keystore.json";
 pub const ENCRYPTED_KEYSTORE_NAME: &str = "keystore";
 
-/// KeyInfo struct, this contains the type of key (stored as a string) and the private key.
-/// note how the private key is stored as a byte vector
+/// KeyInfo struct, this contains the type of key (stored as a string) and the
+/// private key. note how the private key is stored as a byte vector
 ///
-/// TODO need to update keyinfo to not use SignatureType, use string instead to save keys like
-/// jwt secret
+/// TODO need to update keyinfo to not use SignatureType, use string instead to
+/// save keys like jwt secret
 #[derive(Clone, PartialEq, Debug, Eq, Serialize, Deserialize)]
 pub struct KeyInfo {
     key_type: SignatureType,
@@ -105,7 +105,8 @@ pub mod json {
     }
 }
 
-/// KeyStore struct, this contains a HashMap that is a set of KeyInfos resolved by their Address
+/// KeyStore struct, this contains a HashMap that is a set of KeyInfos resolved
+/// by their Address
 pub trait Store {
     /// Return all of the keys that are stored in the KeyStore
     fn list(&self) -> Vec<String>;
@@ -117,7 +118,8 @@ pub trait Store {
     fn remove(&mut self, key: String) -> Result<KeyInfo, Error>;
 }
 
-/// KeyStore struct, this contains a HashMap that is a set of KeyInfos resolved by their Address
+/// KeyStore struct, this contains a HashMap that is a set of KeyInfos resolved
+/// by their Address
 #[derive(Clone, PartialEq, Debug, Eq)]
 pub struct KeyStore {
     key_info: HashMap<String, KeyInfo>,

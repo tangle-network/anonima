@@ -16,11 +16,13 @@ use data_encoding_macro::{internal_new_encoding, new_encoding};
 use encoding::{blake2b_variable, serde_bytes, Cbor};
 use once_cell::sync::OnceCell;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
+use std::borrow::Cow;
+use std::fmt;
 use std::hash::Hash;
 use std::str::FromStr;
-use std::{borrow::Cow, fmt};
 
-/// defines the encoder for base32 encoding with the provided string with no padding
+/// defines the encoder for base32 encoding with the provided string with no
+/// padding
 const ADDRESS_ENCODER: Encoding = new_encoding! {
     symbols: "abcdefghijklmnopqrstuvwxyz234567",
     padding: None,
@@ -48,8 +50,8 @@ const UNDEF_ADDR_STRING: &str = "<empty>";
 // TODO pull network from config (probably)
 pub static NETWORK_DEFAULT: OnceCell<Network> = OnceCell::new();
 
-/// Address is the struct that defines the protocol and data payload conversion from either
-/// a public key or value
+/// Address is the struct that defines the protocol and data payload conversion
+/// from either a public key or value
 #[derive(PartialEq, Eq, Clone, Debug, Hash, Copy)]
 pub struct Address {
     network: Network,
@@ -124,14 +126,14 @@ impl Address {
         Protocol::from(self.payload)
     }
 
-    /// Returns the `Payload` object from the address, where the respective protocol data is kept
-    /// in an enum separated by protocol
+    /// Returns the `Payload` object from the address, where the respective
+    /// protocol data is kept in an enum separated by protocol
     pub fn payload(&self) -> &Payload {
         &self.payload
     }
 
-    /// Converts Address into `Payload` object, where the respective protocol data is kept
-    /// in an enum separated by protocol
+    /// Converts Address into `Payload` object, where the respective protocol
+    /// data is kept in an enum separated by protocol
     pub fn into_payload(self) -> Payload {
         self.payload
     }
@@ -174,6 +176,7 @@ impl fmt::Display for Address {
 
 impl FromStr for Address {
     type Err = Error;
+
     fn from_str(addr: &str) -> Result<Self, Error> {
         if addr.len() > MAX_ADDRESS_LEN || addr.len() < 3 {
             return Err(Error::InvalidLength);

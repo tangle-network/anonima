@@ -4,12 +4,14 @@
 use libp2p::gossipsub::{
     score_parameter_decay, PeerScoreParams, PeerScoreThresholds, TopicScoreParams,
 };
-use std::{collections::HashMap, time::Duration};
+use std::collections::HashMap;
+use std::time::Duration;
 
-// All these parameters are copied from what Lotus has set for their Topic scores.
-// They are currently unused because enabling them causes GossipSub blocks to come
-// delayed usually by 1 second compared to when we have these parameters disabled.
-// Leaving these here so that we can enable and fix these parameters when they are needed.
+// All these parameters are copied from what Lotus has set for their Topic
+// scores. They are currently unused because enabling them causes GossipSub
+// blocks to come delayed usually by 1 second compared to when we have these
+// parameters disabled. Leaving these here so that we can enable and fix these
+// parameters when they are needed.
 
 #[allow(dead_code)]
 fn build_msg_topic_config() -> TopicScoreParams {
@@ -24,7 +26,7 @@ fn build_msg_topic_config() -> TopicScoreParams {
 
         // deliveries decay after 10min, cap at 100 tx
         first_message_deliveries_weight: 5.0,
-        first_message_deliveries_decay: score_parameter_decay(Duration::from_secs(10 * 60)), // 10mins
+        first_message_deliveries_decay: score_parameter_decay(Duration::from_secs(10 * 60)), /* 10mins */
         // 100 blocks in an hour
         first_message_deliveries_cap: 100.0,
         // invalid messages decay after 1 hour
@@ -46,7 +48,7 @@ fn build_block_topic_config() -> TopicScoreParams {
 
         // deliveries decay after 10min, cap at 100 tx
         first_message_deliveries_weight: 0.5,
-        first_message_deliveries_decay: score_parameter_decay(Duration::from_secs(10 * 60)), // 10mins
+        first_message_deliveries_decay: score_parameter_decay(Duration::from_secs(10 * 60)), /* 10mins */
         // 100 messages in 10 minutes
         first_message_deliveries_cap: 100.0,
         // invalid messages decay after 1 hour

@@ -3,8 +3,8 @@
 
 mod examples;
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use anonima_bitfield::BitField;
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 use examples::{example1, example2};
 

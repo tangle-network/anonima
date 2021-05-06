@@ -1,9 +1,9 @@
 // Copyright 2020 ChainSafe Systems
 // SPDX-License-Identifier: Apache-2.0, MIT
 
+use anonima_libp2p::utils::get_home_dir;
 use anonima_libp2p::Libp2pConfig;
 use serde::Deserialize;
-use anonima_libp2p::utils::get_home_dir;
 
 #[derive(Debug, Deserialize)]
 #[serde(default)]

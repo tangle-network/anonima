@@ -1,52 +1,47 @@
 // Copyright 2020 ChainSafe Systems
 // SPDX-License-Identifier: Apache-2.0, MIT
 
-use crate::{
-    discovery::DiscoveryOut,
-    rpc::RequestResponseError,
-};
-use crate::{config::Libp2pConfig, discovery::DiscoveryBehaviour};
-use crate::{
-    discovery::DiscoveryConfig,
-    hello::{HelloCodec, HelloProtocolName, HelloRequest, HelloResponse},
-};
+use crate::config::Libp2pConfig;
+use crate::discovery::{DiscoveryBehaviour, DiscoveryConfig, DiscoveryOut};
+use crate::hello::{HelloCodec, HelloProtocolName, HelloRequest, HelloResponse};
+use crate::rpc::RequestResponseError;
 
 use futures::channel::oneshot::{self, Sender as OneShotSender};
-use futures::{prelude::*, stream::FuturesUnordered};
+use futures::prelude::*;
+use futures::stream::FuturesUnordered;
 use git_version::git_version;
+use libp2p::core::identity::Keypair;
 use libp2p::core::PeerId;
+use libp2p::gossipsub::error::{PublishError, SubscriptionError};
 use libp2p::gossipsub::{
-    error::PublishError, error::SubscriptionError, Gossipsub, GossipsubConfigBuilder,
-    GossipsubEvent, IdentTopic as Topic, MessageAuthenticity, MessageId, TopicHash, ValidationMode,
+    Gossipsub, GossipsubConfigBuilder, GossipsubEvent, IdentTopic as Topic, MessageAuthenticity,
+    MessageId, TopicHash, ValidationMode,
 };
 use libp2p::identify::{Identify, IdentifyEvent};
-use libp2p::ping::{
-    handler::{PingFailure, PingSuccess},
-    Ping, PingEvent,
-};
+use libp2p::kad::QueryId;
+use libp2p::ping::handler::{PingFailure, PingSuccess};
+use libp2p::ping::{Ping, PingEvent};
 use libp2p::request_response::{
     ProtocolSupport, RequestId, RequestResponse, RequestResponseConfig, RequestResponseEvent,
     RequestResponseMessage, ResponseChannel,
 };
 use libp2p::swarm::{NetworkBehaviourAction, NetworkBehaviourEventProcess, PollParameters};
 use libp2p::NetworkBehaviour;
-use libp2p::{core::identity::Keypair, kad::QueryId};
 use log::{debug, trace, warn};
-use std::collections::HashSet;
-use std::convert::TryFrom;
+use std::collections::{HashMap, HashSet};
+use std::convert::{TryFrom, TryInto};
 use std::error::Error;
 use std::pin::Pin;
-use std::time::Duration;
-use std::time::{SystemTime, UNIX_EPOCH};
-use std::{collections::HashMap, convert::TryInto};
-use std::{task::Context, task::Poll};
+use std::task::{Context, Poll};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 lazy_static! {
     static ref VERSION: &'static str = env!("CARGO_PKG_VERSION");
     static ref CURRENT_COMMIT: &'static str = git_version!();
 }
 
-/// Libp2p behaviour for the Forest node. This handles all sub protocols needed for a Filecoin node.
+/// Libp2p behaviour for the Forest node. This handles all sub protocols needed
+/// for a Filecoin node.
 #[derive(NetworkBehaviour)]
 #[behaviour(out_event = "ForestBehaviourEvent", poll_method = "poll")]
 pub(crate) struct ForestBehaviour {
@@ -65,7 +60,8 @@ pub(crate) struct ForestBehaviour {
         HashMap<RequestId, OneShotSender<Result<HelloResponse, RequestResponseError>>>,
 }
 
-/// Event type which is emitted from the [ForestBehaviour] into the libp2p service.
+/// Event type which is emitted from the [ForestBehaviour] into the libp2p
+/// service.
 #[derive(Debug)]
 pub(crate) enum ForestBehaviourEvent {
     PeerConnected(PeerId),
@@ -251,8 +247,10 @@ impl ForestBehaviour {
         )
         .unwrap();
 
-        // TODO: Figure out why this delays incoming blocks. See gossip_params.rs for the params settings.
-        // gossipsub.with_peer_score(build_peer_score_params(network_name), build_peer_score_threshold()).unwrap();
+        // TODO: Figure out why this delays incoming blocks. See gossip_params.rs for
+        // the params settings.
+        // gossipsub.with_peer_score(build_peer_score_params(network_name),
+        // build_peer_score_threshold()).unwrap();
 
         let mut discovery_config = DiscoveryConfig::new(local_key.public(), network_name);
         discovery_config

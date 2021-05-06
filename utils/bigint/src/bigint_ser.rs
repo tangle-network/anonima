@@ -5,7 +5,8 @@ use num_bigint::{BigInt, Sign};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
-/// Wrapper for serializing big ints to match filecoin spec. Serializes as bytes.
+/// Wrapper for serializing big ints to match filecoin spec. Serializes as
+/// bytes.
 #[derive(Serialize)]
 #[serde(transparent)]
 pub struct BigIntSer<'a>(#[serde(with = "self")] pub &'a BigInt);

@@ -1,16 +1,16 @@
 // Copyright 2020 ChainSafe Systems
 // SPDX-License-Identifier: Apache-2.0, MIT
 
-use crate::MethodNum;
-use crate::Serialized;
 use super::Message;
+use crate::{MethodNum, Serialized};
 use address::Address;
 use derive_builder::Builder;
 use encoding::Cbor;
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-/// Default Unsigned VM message type which includes all data needed for a state transition
+/// Default Unsigned VM message type which includes all data needed for a state
+/// transition
 ///
 /// Usage:
 /// ```
@@ -30,7 +30,6 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 ///     .version(0) // optional
 ///     .build()
 ///     .unwrap();
-///
 // /// Commands can be chained, or built separately
 /// let mut message_builder = UnsignedMessage::builder();
 /// message_builder.sequence(1);
@@ -62,7 +61,7 @@ impl UnsignedMessage {
     pub fn to_signing_bytes(&self) -> Vec<u8> {
         // Safe to unwrap here, unsigned message cannot fail to serialize.
         // self.cid().unwrap().to_bytes()
-        // 
+        //
         // TODO: Add proper impl for anonima
         return vec![];
     }
@@ -89,13 +88,7 @@ impl<'de> Deserialize<'de> for UnsignedMessage {
     where
         D: Deserializer<'de>,
     {
-        let (
-            version,
-            to,
-            from,
-            method_num,
-            params,
-        ) = Deserialize::deserialize(deserializer)?;
+        let (version, to, from, method_num, params) = Deserialize::deserialize(deserializer)?;
         Ok(Self {
             version,
             from,
@@ -110,12 +103,15 @@ impl Message for UnsignedMessage {
     fn from(&self) -> &Address {
         &self.from
     }
+
     fn to(&self) -> &Address {
         &self.to
     }
+
     fn method_num(&self) -> MethodNum {
         self.method_num
     }
+
     fn params(&self) -> &Serialized {
         &self.params
     }

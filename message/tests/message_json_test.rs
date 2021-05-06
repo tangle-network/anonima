@@ -4,17 +4,11 @@
 #![cfg(feature = "json")]
 
 use address::Address;
+use anonima_message::signed_message::json::{SignedMessageJson, SignedMessageJsonRef};
+use anonima_message::signed_message::{self, SignedMessage};
+use anonima_message::unsigned_message::json::{UnsignedMessageJson, UnsignedMessageJsonRef};
+use anonima_message::unsigned_message::{self, UnsignedMessage};
 use crypto::{Signature, Signer};
-use anonima_message::signed_message::{
-    self,
-    json::{SignedMessageJson, SignedMessageJsonRef},
-    SignedMessage,
-};
-use anonima_message::unsigned_message::{
-    self,
-    json::{UnsignedMessageJson, UnsignedMessageJsonRef},
-    UnsignedMessage,
-};
 use serde::{Deserialize, Serialize};
 use serde_json::{from_str, to_string};
 use std::error::Error;
