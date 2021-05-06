@@ -240,6 +240,7 @@ impl Libp2pService {
 }
 
 async fn emit_event(sender: &Sender<NetworkEvent>, event: NetworkEvent) {
+    debug!("Sending {:?} to peers", event);
     if sender.send(event).await.is_err() {
         error!("Failed to emit event: Network channel receiver has been dropped");
     }
