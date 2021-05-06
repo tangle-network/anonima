@@ -87,10 +87,10 @@ pub(super) async fn start(config: Config) {
     let p2p_task = task::spawn(async {
         p2p_service.run().await;
     });
-    info!("Task is running ..");
+
     // Block until ctrl-c is hit
-    // block_until_sigint().await;
-    let () = futures::future::pending().await;
+    block_until_sigint().await;
+
     let keystore_write = task::spawn(async move {
         keystore.read().await.flush().unwrap();
     });
