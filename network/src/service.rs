@@ -145,7 +145,6 @@ impl Libp2pService {
         let _pubsub_dkg_str = format!("{}/{}", PUBSUB_DKG_STR, self.network_name);
         let pubsub_msg_str = format!("{}/{}", PUBSUB_MSG_STR, self.network_name);
         loop {
-            trace!("Looping ...");
             futures::select! {
                 swarm_event = swarm_stream.next() => match swarm_event {
                     // outbound events

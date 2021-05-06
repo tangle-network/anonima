@@ -235,6 +235,18 @@ impl NetworkBehaviourEventProcess<RequestResponseEvent<HelloRequest, HelloRespon
 }
 
 impl ForestBehaviour {
+    /// Consumes the events list when polled.
+    fn poll<TBehaviourIn>(
+        &mut self,
+        cx: &mut Context,
+        _: &mut impl PollParameters,
+    ) -> Poll<NetworkBehaviourAction<TBehaviourIn, ForestBehaviourEvent>> {
+        if !self.events.is_empty() {
+            return Poll::Ready(NetworkBehaviourAction::GenerateEvent(self.events.remove(0)));
+        }
+        Poll::Pending
+    }
+
     pub fn new(local_key: &Keypair, config: &Libp2pConfig, network_name: &str) -> Self {
         let mut gs_config_builder = GossipsubConfigBuilder::default();
         gs_config_builder.max_transmit_size(1 << 20);
