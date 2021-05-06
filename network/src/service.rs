@@ -153,7 +153,6 @@ impl Libp2pService {
         let mut interval = stream::interval(Duration::from_secs(15)).fuse();
         let _pubsub_dkg_str = format!("{}/{}", PUBSUB_DKG_STR, self.network_name);
         let pubsub_msg_str = format!("{}/{}", PUBSUB_MSG_STR, self.network_name);
-        debug!("Looping...");
         loop {
             select! {
                 swarm_event = swarm_stream.next() => match swarm_event {
