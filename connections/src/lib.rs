@@ -1,5 +1,5 @@
-mod ethereum;
-mod substrate;
 
+pub mod ethereum;
+mod substrate;
 mod types;
 pub use types::*;
