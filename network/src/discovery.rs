@@ -321,15 +321,15 @@ impl NetworkBehaviour for DiscoveryBehaviour {
     }
 
     #[allow(clippy::type_complexity)]
-	fn poll(
-		&mut self,
-		cx: &mut Context,
-		params: &mut impl PollParameters,
-	) -> Poll<
-		NetworkBehaviourAction<
-			<<Self::ProtocolsHandler as IntoProtocolsHandler>::Handler as ProtocolsHandler>::InEvent,
-			Self::OutEvent,
-		>,
+    fn poll(
+        &mut self,
+        cx: &mut Context,
+        params: &mut impl PollParameters,
+    ) -> Poll<
+        NetworkBehaviourAction<
+            <<Self::ProtocolsHandler as IntoProtocolsHandler>::Handler as ProtocolsHandler>::InEvent,
+            Self::OutEvent,
+            >,
     >{
         // Immediately process the content of `discovered`.
         if let Some(ev) = self.pending_events.pop_front() {

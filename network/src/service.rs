@@ -110,12 +110,6 @@ impl Libp2pService {
         .connection_event_buffer_size(64)
         .build();
 
-        if let Some(addr) = Some("/ip4/127.0.0.1/tcp/44655") {
-            let remote = addr.parse().unwrap();
-            Swarm::dial_addr(&mut swarm, remote).unwrap();
-            println!("Dialed {}", addr);
-        }
-
         Swarm::listen_on(&mut swarm, config.listening_multiaddr).unwrap();
 
         // Bootstrap with Kademlia
