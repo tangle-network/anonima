@@ -369,6 +369,7 @@ impl NetworkBehaviour for DiscoveryBehaviour {
                         KademliaEvent::PendingRoutablePeer { .. } => {
                             // Intentionally ignore
                         }
+                        KademliaEvent::QueryResult { .. } => {}
                         other => {
                             debug!("Libp2p => Unhandled Kademlia event: {:?}", other)
                         }

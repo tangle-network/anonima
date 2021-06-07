@@ -57,13 +57,21 @@ pub struct DaemonOpts {
     #[structopt(
         long,
         help = "Use a temporary directory instead of data dir provided from config file.
-                useful for local testing"
+        useful for local testing"
     )]
     pub tmp: bool,
+    #[structopt(long, help = "Enable development logging (default is false)")]
+    pub dev: bool,
 }
 
 impl DaemonOpts {
     pub fn to_config(&self) -> Result<Config, io::Error> {
+        let logger_env = if self.dev {
+            super::logger::LogEnv::Develoment
+        } else {
+            super::logger::LogEnv::Production
+        };
+        super::logger::setup_logger(logger_env);
         let mut cfg: Config = match &self.config {
             Some(config_file) => {
                 // Read from config file
