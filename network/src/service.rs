@@ -110,12 +110,6 @@ impl Libp2pService {
         .connection_event_buffer_size(64)
         .build();
 
-        if let Some(addr) = Some("/ip4/127.0.0.1/tcp/44655") {
-            let remote = addr.parse().unwrap();
-            Swarm::dial_addr(&mut swarm, remote).unwrap();
-            println!("Dialed {}", addr);
-        }
-
         Swarm::listen_on(&mut swarm, config.listening_multiaddr).unwrap();
 
         // Bootstrap with Kademlia
@@ -141,7 +135,7 @@ impl Libp2pService {
     pub async fn run(self) {
         let mut swarm_stream = self.swarm.fuse();
         let mut network_stream = self.network_receiver_in.fuse();
-        let mut interval = stream::interval(Duration::from_secs(15)).fuse();
+        let mut interval = stream::interval(Duration::from_secs(5)).fuse();
         let _pubsub_dkg_str = format!("{}/{}", PUBSUB_DKG_STR, self.network_name);
         let pubsub_msg_str = format!("{}/{}", PUBSUB_MSG_STR, self.network_name);
         loop {

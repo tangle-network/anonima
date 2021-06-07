@@ -40,7 +40,7 @@ pub struct DaemonOpts {
     pub port: Option<String>,
     #[structopt(short, long, help = "Allow Kademlia (default = true)")]
     pub kademlia: Option<bool>,
-    #[structopt(short, long, help = "Allow MDNS (default = false)")]
+    #[structopt(short, long, help = "Allow MDNS (default = true)")]
     pub mdns: Option<bool>,
     #[structopt(long, help = "Number of worker sync tasks spawned (default is 1")]
     pub worker_tasks: Option<usize>,
@@ -54,10 +54,24 @@ pub struct DaemonOpts {
         help = "Amount of Peers we want to be connected to (default is 75)"
     )]
     pub target_peer_count: Option<u32>,
+    #[structopt(
+        long,
+        help = "Use a temporary directory instead of data dir provided from config file.
+        useful for local testing"
+    )]
+    pub tmp: bool,
+    #[structopt(long, help = "Enable development logging (default is false)")]
+    pub dev: bool,
 }
 
 impl DaemonOpts {
     pub fn to_config(&self) -> Result<Config, io::Error> {
+        let logger_env = if self.dev {
+            super::logger::LogEnv::Develoment
+        } else {
+            super::logger::LogEnv::Production
+        };
+        super::logger::setup_logger(logger_env);
         let mut cfg: Config = match &self.config {
             Some(config_file) => {
                 // Read from config file
@@ -67,6 +81,10 @@ impl DaemonOpts {
             }
             None => Config::default(),
         };
+
+        if self.tmp {
+            cfg = Config::tmp();
+        }
 
         if self.rpc.unwrap_or(cfg.enable_rpc) {
             cfg.enable_rpc = true;

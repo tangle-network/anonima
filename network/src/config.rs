@@ -26,7 +26,7 @@ impl Default for Libp2pConfig {
         Self {
             listening_multiaddr: "/ip4/0.0.0.0/tcp/0".parse().unwrap(),
             bootstrap_peers,
-            mdns: false,
+            mdns: true,
             kademlia: true,
             target_peer_count: 75,
         }

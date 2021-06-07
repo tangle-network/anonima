@@ -269,7 +269,6 @@ impl ForestBehaviour {
             .with_mdns(config.mdns)
             .with_kademlia(config.kademlia)
             .with_user_defined(config.bootstrap_peers.clone())
-            // TODO allow configuring this through config.
             .discovery_limit(config.target_peer_count as u64);
 
         let hp = std::iter::once((HelloProtocolName, ProtocolSupport::Full));

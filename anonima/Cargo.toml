@@ -32,6 +32,7 @@ net_utils = { path = "../utils/net_utils" }
 num-bigint = { path = "../utils/bigint", package = "anonima_bigint" }
 address = { path = "../address", package = "anonima-address", version = "0.3" }
 anonima_libp2p = { path = "../network" }
+temp-dir = "0.1"
 
 [dependencies.jsonrpc-v2]
 version = "0.10.0"
